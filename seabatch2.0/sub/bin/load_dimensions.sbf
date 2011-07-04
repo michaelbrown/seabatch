@@ -1,0 +1,314 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;This script ...
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+SEABATCH_SEPARATOR='==========================================================================='
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define SEABATCH_SCRIPT_NAME and SEABATCH_SCRIPT_VERSION, the name and
+;version of the current script.
+
+SEABATCH_SCRIPT_NAME='load_dimensions.sbf'
+SEABATCH_SCRIPT_VERSION='2.0'
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ' v', SEABATCH_SCRIPT_VERSION, ', SeaBatch v2.0 ...'
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define variables read in from "load_output_parameter_file.txt".
+
+openr, LUN, 'load_output_parameter_file.txt', /get_lun
+
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
+
+;Read in LOADED_FILE.
+LOADED_FILE=''
+readf, LUN, LOADED_FILE
+
+;Read in OUTPUT_PRODUCT.
+OUTPUT_PRODUCT=''
+readf, LUN, OUTPUT_PRODUCT
+
+;Read in OUTPUT_STATISTIC.
+OUTPUT_STATISTIC=''
+readf, LUN, OUTPUT_STATISTIC
+
+;Read in BASENAME.
+BASENAME=''
+readf, LUN, BASENAME
+
+;Read in FORCED_LOAD_X_DIMENSION and FORCED_LOAD_Y_DIMENSION.
+FORCED_LOAD_X_DIMENSION=''
+FORCED_LOAD_Y_DIMENSION=''
+readf, LUN, FORCED_LOAD_X_DIMENSION
+readf, LUN, FORCED_LOAD_Y_DIMENSION
+
+;Read in MINIMUM_LOAD_DIMENSION.
+MINIMUM_LOAD_DIMENSION=''
+readf, LUN, MINIMUM_LOAD_DIMENSION
+
+;Read in WEST, EAST, NORTH, and SOUTH.
+WEST=''
+EAST=''
+NORTH=''
+SOUTH=''
+readf, LUN, WEST
+readf, LUN, EAST
+readf, LUN, NORTH
+readf, LUN, SOUTH
+
+free_lun, LUN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Display the processing variables used by basename.sbf.
+
+print, '' 
+print, '' 
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
+print, ''
+print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- LOADED_FILE: ', LOADED_FILE
+print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
+print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
+print, '- BASENAME: ', BASENAME
+print, '- FORCED_LOAD_X_DIMENSION: ', FORCED_LOAD_X_DIMENSION
+print, '- FORCED_LOAD_Y_DIMENSION: ', FORCED_LOAD_Y_DIMENSION
+print, '- MINIMUM_LOAD_DIMENSION: ', MINIMUM_LOAD_DIMENSION
+print, '- WEST: ', WEST
+print, '- EAST: ', EAST
+print, '- NORTH: ', NORTH
+print, '- SOUTH: ', SOUTH
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Determining the load x and y dimensions ...'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+if ((FORCED_LOAD_X_DIMENSION ne 'DEFAULT')) and ((FORCED_LOAD_Y_DIMENSION ne 'DEFAULT')) then begin & $
+	
+	print, '' & $
+	print, 'The forced load x and y dimensions are NOT set to DEFAULT.' & $
+	print, '' & $
+	print, 'They are set to ', FORCED_LOAD_X_DIMENSION, ' and ', FORCED_LOAD_Y_DIMENSION, ' respectively.' & $
+	print, '' & $
+	print, 'These values will be used.' & $
+
+	LOAD_X_DIMENSION=FORCED_LOAD_X_DIMENSION & $
+	LOAD_Y_DIMENSION=FORCED_LOAD_Y_DIMENSION & $
+
+endif 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+if ((FORCED_LOAD_X_DIMENSION eq 'DEFAULT')) and ((FORCED_LOAD_Y_DIMENSION eq 'DEFAULT')) then begin & $
+
+	print, '' & $
+	print, 'The forced load x and y dimensions are set to DEFAULT.' & $
+
+	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
+		
+		print, '' & $
+		print, LOADED_FILE, ' is a SeaBatch Level-3 Binned file.' & $ 
+
+		KM_POSITION=strpos(LOADED_FILE, 'km') & $
+		PRECEEDING_UNDERSCORE_POSITION=strpos(LOADED_FILE, '_', KM_POSITION, /REVERSE_SEARCH) & $
+		SPATIAL_BIN_ELEMENT_AMOUNT=KM_POSITION - PRECEEDING_UNDERSCORE_POSITION & $
+		SPATIAL_BIN=strmid(LOADED_FILE, PRECEEDING_UNDERSCORE_POSITION + 1, SPATIAL_BIN_ELEMENT_AMOUNT - 1) & $
+
+		print, '' & $		
+		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+		print, '' & $
+		print, 'NOTE: This is determined with its filename.' & $
+
+	endif & $
+
+	if LOADED_FILE_TYPE eq 'OBPG_MODIS_L3_BIN' then begin & $
+
+		print, '' & $
+		print, LOADED_FILE, ' is an OBPG MODIS Level-3 Binned file.' & $
+
+		SPATIAL_BIN='4' & $
+
+		print, '' & $		
+		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+		print, '' & $
+		print, 'NOTE: This assumes that all OBPG distributed MODIS Level-3 Binned files have a spatial resolution of 4 km.' & $
+
+	endif & $
+
+	if LOADED_FILE_TYPE eq 'OBPG_SEAWIFS_L3_BIN' then begin & $
+
+		print, '' & $
+		print, LOADED_FILE, ' is an OBPG SeaWiFS Level-3 Binned file.' & $
+
+		SPATIAL_BIN='9' & $
+
+		print, '' & $		
+		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+		print, '' & $
+		print, 'NOTE: This assumes that all OBPG distributed SeaWiFS Level-3 Binned files have a spatial resolution of 9 km.' & $
+
+	endif & $
+
+	case SPATIAL_BIN of & $
+
+		'.5': ACTUAL_SPATIAL_BIN=.580 & $
+		'1': ACTUAL_SPATIAL_BIN=1.160 & $
+		'2': ACTUAL_SPATIAL_BIN=2.319 & $
+		'4': ACTUAL_SPATIAL_BIN=4.638 & $
+		'9': ACTUAL_SPATIAL_BIN=9.277 & $
+		'36': ACTUAL_SPATIAL_BIN=37.106 & $
+
+	endcase & $
+
+	print, '' & $
+	print, 'A spatial resolution of ', strcompress(string(ACTUAL_SPATIAL_BIN), /remove_all), ' km will be used.' & $
+
+	LONGITUDE_RANGE=float(EAST) - float(WEST) & $
+	LATITUDE_RANGE=float(NORTH) - float(SOUTH) & $
+
+	print, '' & $
+	print, 'Longitude range: ', strcompress(string(LONGITUDE_RANGE), /remove_all), ' degrees, Latitude range: ', strcompress(string(LATITUDE_RANGE), /remove_all), ' degrees.' & $
+	
+	DEFAULT_LOAD_X_DIMENSION=fix(round((LONGITUDE_RANGE*111.0)/ACTUAL_SPATIAL_BIN)) & $
+	DEFAULT_LOAD_Y_DIMENSION=fix(round((LATITUDE_RANGE*111.0)/ACTUAL_SPATIAL_BIN)) & $
+
+	print, '' & $
+	print, 'The default load x and y dimensions are ', strcompress(string(DEFAULT_LOAD_X_DIMENSION), /remove_all), ' and ', strcompress(string(DEFAULT_LOAD_Y_DIMENSION), /remove_all), ' respectively.' & $
+
+
+	if MINIMUM_LOAD_DIMENSION eq 'DEFAULT' then begin & $
+
+		print, '' & $
+		print, 'The minimum load dimension is set to DEFAULT.' & $
+		print, '' & $
+		print, 'The default load x and y dimensions will be used.' & $
+
+		LOAD_X_DIMENSION=DEFAULT_LOAD_X_DIMENSION & $
+		LOAD_Y_DIMENSION=DEFAULT_LOAD_Y_DIMENSION & $
+
+	endif & $
+
+	if MINIMUM_LOAD_DIMENSION ne 'DEFAULT' then begin & $
+
+		print, '' & $
+		print, 'The minimum load dimension is NOT set to DEFAULT.' & $
+		print, '' & $
+		print, 'The default load x and y dimensions will be scaled.' & $
+
+		DEFAULT_LOAD_XY_DIMENSION_RATIO=float(DEFAULT_LOAD_X_DIMENSION)/float(DEFAULT_LOAD_Y_DIMENSION) & $
+
+		print, '' & $
+		print, 'The ratio of ', strcompress(string(DEFAULT_LOAD_X_DIMENSION), /remove_all), ' to ', strcompress(string(DEFAULT_LOAD_Y_DIMENSION), /remove_all), ' is ', strcompress(string(DEFAULT_LOAD_XY_DIMENSION_RATIO), /remove_all), '. This ratio must be maintained.' & $
+
+		if DEFAULT_LOAD_XY_DIMENSION_RATIO ge 1.0 then begin & $
+
+			LOAD_X_DIMENSION=round(float(MINIMUM_LOAD_DIMENSION)*DEFAULT_LOAD_XY_DIMENSION_RATIO) & $
+			LOAD_Y_DIMENSION=MINIMUM_LOAD_DIMENSION & $
+
+		endif & $
+
+		if DEFAULT_LOAD_XY_DIMENSION_RATIO lt 1.0 then begin & $
+
+			LOAD_X_DIMENSION=MINIMUM_LOAD_DIMENSION & $
+			LOAD_Y_DIMENSION=round(float(MINIMUM_LOAD_DIMENSION)/DEFAULT_LOAD_XY_DIMENSION_RATIO) & $
+
+		endif & $
+
+	endif & $
+
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+print, ''
+print, 'The x and y load dimensions are ', strcompress(string(LOAD_X_DIMENSION), /remove_all), ' and ', strcompress(string(LOAD_Y_DIMENSION), /remove_all), ' respectively.'
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+openw, LUN, 'load_output_parameter_file.txt', /get_lun, /APPEND
+printf, LUN, strcompress(string(LOAD_X_DIMENSION), /remove_all)
+printf, LUN, strcompress(string(LOAD_Y_DIMENSION), /remove_all)
+free_lun, LUN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

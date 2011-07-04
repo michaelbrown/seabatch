@@ -1,0 +1,424 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+L2_FILE_PATTERN='[AST]*.L2_[GL]AC*'
+L2_FILE_RESOLUTION='250'
+
+L2_FLAGS=['LAND', 'HILT', 'HISATZEN', 'STRAYLIGHT', 'CLDICE', 'COCCOLITH', 'LOWLW', 'CHLWARN', 'CHLFAIL', 'NAVWARN', 'NAVFAIL', 'FILTER', 'HIGLINT']
+L2_PRODUCTS=['nLw_645']
+
+FLAT_FILE_WEST='-134'
+FLAT_FILE_EAST='-132'
+FLAT_FILE_NORTH='70'
+FLAT_FILE_SOUTH='69'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='level2_qc.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_L2_FILE_RESOLUTION, FLOAT_FLAT_FILE_WEST, 
+;FLOAT_FLAT_FILE_EAST, FLOAT_FLAT_FILE_NORTH, and FLOAT_FLAT_FILE_SOUTH, 
+;the result of converting L2_FILE_RESOLUTION, FLAT_FILE_WEST, 
+;FLAT_FILE_EAST, FLAT_FILE_NORTH, and FLAT_FILE_SOUTH to floating point 
+;variables.
+
+case L2_FILE_RESOLUTION of & $
+	'250': FLOAT_L2_FILE_RESOLUTION=.290 & $
+	'500': FLOAT_L2_FILE_RESOLUTION=.580 & $
+	'1000': FLOAT_L2_FILE_RESOLUTION=1.160 & $
+endcase
+
+FLOAT_FLAT_FILE_WEST=float(FLAT_FILE_WEST)
+FLOAT_FLAT_FILE_EAST=float(FLAT_FILE_EAST)
+FLOAT_FLAT_FILE_NORTH=float(FLAT_FILE_NORTH)
+FLOAT_FLAT_FILE_SOUTH=float(FLAT_FILE_SOUTH)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define L2_FILES, a list of the files in the current directory whose names 
+;match the pattern specified by L2_FILE_PATTERN. Define L2_FILE_AMOUNT, the 
+;number of flat files.
+
+
+L2_FILES=findfile(L2_FILE_PATTERN)
+
+L2_FILE_AMOUNT=n_elements(L2_FILES)
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Level-2 files to be quality-controlled:'
+print, ''
+print, L2_FILES
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define L2_FLAGNAME_VECTOR, a vector of the names of the Level-2 flags that 
+;will be used to mask the data.
+
+case L2_FLAGS(0) of & $
+	'HMODISA': L2_FLAGNAME_VECTOR=['ATMFAIL', 'LAND', 'HILT', 'HISATZEN', 'STRAYLIGHT', 'CLDICE', 'COCCOLITH', 'LOWLW','CHLWARN', 'CHLFAIL', 'NAVWARN', 'MAXAERITER', 'ATMWARN', 'HISOLZEN', 'NAVFAIL', 'FILTER', 'HIGLINT'] & $
+	else: L2_FLAGNAME_VECTOR=L2_FLAGS & $
+endcase
+	
+;Define L2_FLAGNAME_AMOUNT, the number of elements of L2_FLAGNAME_VECTOR.
+L2_FLAGNAME_AMOUNT=n_elements(L2_FLAGNAME_VECTOR)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define L2_FLAGBIT_VECTOR, a vector of the bit #'s that correspond to the
+;Level-2 flag names in L2_FLAGNAME_VECTOR.
+
+L2_FLAGBIT_VECTOR=intarr(L2_FLAGNAME_AMOUNT)
+
+for A=0, L2_FLAGNAME_AMOUNT - 1 do begin & $
+
+	;Define CURRENT_L2_FLAGNAME, the "Ath" element of L2_FLAGNAME_VECTOR.
+	
+	CURRENT_L2_FLAGNAME=L2_FLAGNAME_VECTOR(A) & $
+	
+	case CURRENT_L2_FLAGNAME of & $
+		'ATMFAIL':    L2_FLAGBIT_VECTOR(A)=1 & $
+		'LAND':       L2_FLAGBIT_VECTOR(A)=2 & $
+		'PRODWARN':   L2_FLAGBIT_VECTOR(A)=3 & $
+		'HIGLINT':    L2_FLAGBIT_VECTOR(A)=4 & $
+		'HILT':       L2_FLAGBIT_VECTOR(A)=5 & $
+		'HISATZEN':   L2_FLAGBIT_VECTOR(A)=6 & $
+		'COASTZ':     L2_FLAGBIT_VECTOR(A)=7 & $
+		'spare':      L2_FLAGBIT_VECTOR(A)=8 & $
+		'STRAYLIGHT': L2_FLAGBIT_VECTOR(A)=9 & $
+		'CLDICE':     L2_FLAGBIT_VECTOR(A)=10 & $
+		'COCCOLITH':  L2_FLAGBIT_VECTOR(A)=11 & $
+		'TURBIDW':    L2_FLAGBIT_VECTOR(A)=12 & $
+		'HISOLZEN':   L2_FLAGBIT_VECTOR(A)=13 & $
+		'spare':      L2_FLAGBIT_VECTOR(A)=14 & $
+		'LOWLW':      L2_FLAGBIT_VECTOR(A)=15 & $
+		'CHLFAIL':    L2_FLAGBIT_VECTOR(A)=16 & $
+		'NAVWARN':    L2_FLAGBIT_VECTOR(A)=17 & $
+		'ABSAER':     L2_FLAGBIT_VECTOR(A)=18 & $
+		'spare':      L2_FLAGBIT_VECTOR(A)=19 & $
+		'MAXAERITER': L2_FLAGBIT_VECTOR(A)=20 & $
+		'MODGLINT':   L2_FLAGBIT_VECTOR(A)=21 & $
+		'CHLWARN':    L2_FLAGBIT_VECTOR(A)=22 & $
+		'ATMWARN':    L2_FLAGBIT_VECTOR(A)=23 & $
+		'spare':      L2_FLAGBIT_VECTOR(A)=24 & $
+		'SEAICE':     L2_FLAGBIT_VECTOR(A)=25 & $
+		'NAVFAIL':    L2_FLAGBIT_VECTOR(A)=26 & $
+		'FILTER':     L2_FLAGBIT_VECTOR(A)=27 & $
+		'SSTWARN':    L2_FLAGBIT_VECTOR(A)=28 & $
+		'SSTFAIL':    L2_FLAGBIT_VECTOR(A)=29 & $
+		'HIPOL':      L2_FLAGBIT_VECTOR(A)=30 & $
+		'PRODFAIL':   L2_FLAGBIT_VECTOR(A)=31 & $
+		'spare':      L2_FLAGBIT_VECTOR(A)=32 & $
+	endcase & $
+	
+endfor
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Level-2 flags to be applied:'
+print, ''
+print, 'Name	Bit #'
+
+for B=0, L2_FLAGNAME_AMOUNT - 1 do begin & $
+	print, L2_FLAGNAME_VECTOR(B), L2_FLAGBIT_VECTOR(B) & $
+endfor
+
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLAT_FILE_LON_RANGE and FLAT_FILE_LAT_RANGE, the range in longitude
+;and latitude of the reprojected quality-controlled Level-2 flat files, 
+;respectively. Define FLAT_FILE_XDIM and FLAT_FILE_YDIM, the x and y 
+;dimensions of the reprojected quality-controlled Level-2 flat files, 
+;respectively. Define STRING_FLAT_FILE_XDIM and STRING_FLAT_FILE_YDIM, the
+;result of converting FLAT_FILE_XDIM and FLAT_FILE_YDIM to string variables,
+;respectively.
+
+FLAT_FILE_LON_RANGE=FLOAT_FLAT_FILE_EAST - FLOAT_FLAT_FILE_WEST
+FLAT_FILE_LAT_RANGE=FLOAT_FLAT_FILE_NORTH - FLOAT_FLAT_FILE_SOUTH
+
+FLAT_FILE_XDIM=fix(round((FLAT_FILE_LON_RANGE*111.0)/FLOAT_L2_FILE_RESOLUTION))
+FLAT_FILE_YDIM=fix(round((FLAT_FILE_LAT_RANGE*111.0)/FLOAT_L2_FILE_RESOLUTION))
+
+STRING_FLAT_FILE_XDIM=strcompress(string(FLAT_FILE_XDIM), /remove_all)
+STRING_FLAT_FILE_YDIM=strcompress(string(FLAT_FILE_YDIM), /remove_all)
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Reprojected quality-controlled Level-2 flat file characteristics:'
+print, ''
+print, 'West:', FLOAT_FLAT_FILE_WEST
+print, 'East:', FLOAT_FLAT_FILE_EAST
+print, 'North:', FLOAT_FLAT_FILE_NORTH
+print, 'South:', FLOAT_FLAT_FILE_SOUTH
+print, ''
+print, 'Longitude range:', FLAT_FILE_LON_RANGE
+print, 'Latitude range:', FLAT_FILE_LAT_RANGE
+print, ''
+print, 'X dimension:', FLAT_FILE_XDIM
+print, 'Y dimension:', FLAT_FILE_YDIM
+print, ''
+print, 'Spatial resolution (km):', FLOAT_L2_FILE_RESOLUTION
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for C=0, L2_FILE_AMOUNT - 1 do begin & $
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define CURRENT_L2_FILE, the "Cth" element of L2_FILES.
+	
+	CURRENT_L2_FILE=L2_FILES(C) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Current Level-2 file: ', CURRENT_L2_FILE & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define BASE, the basename of CURRENT_L2_FILE. 
+	
+	PERIOD_POS=strpos(CURRENT_L2_FILE,'.') & $
+	
+	BASE=strmid(CURRENT_L2_FILE,0,PERIOD_POS) & $
+	;help, BASE & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	for D=0, n_elements(L2_PRODUCTS) - 1 do begin & $
+	
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Define CURRENT_L2_PRODUCT, the "Dth" element of 
+		;L2_PRODUCTS. 
+	
+		CURRENT_L2_PRODUCT=L2_PRODUCTS(D) & $
+	
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Current Level-2 product: ', CURRENT_L2_PRODUCT & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Load the bands of CURRENT_L2_FILE corresponding to 
+		;CURRENT_L2_PRODUCT and "l2_flags".
+		
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Loading ', CURRENT_L2_PRODUCT, ' and l2_flags bands of ', CURRENT_L2_FILE, ' ...' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, '' & $
+		print, '' & $
+		
+		load, CURRENT_L2_FILE, prod_name=[CURRENT_L2_PRODUCT,'l2_flags'] & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Display the band of CURRENT_L2_FILE corresponding to 
+		;CURRENT_L2_PRODUCT into your system's memory.
+		
+		display, band_no=1, fbuf=1 & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Create a white graphic over pixels in the band of 
+		;CURRENT_L2_FILE corresponding to CURRENT_L2_PRODUCT that 
+		;have tripped one or more of the flags contained in 
+		;L2_FLAGBIT_VECTOR. 
+		
+		load_graph, 2, fbuf=1, ftype='BAND', bit=L2_FLAGBIT_VECTOR, color=[7] & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Mask pixels in the band of CURRENT_L2_FILE corresponding 
+		;to CURRENT_L2_PRODUCT that have tripped one or more of the 
+		;flags contained in L2_FLAGBIT_VECTOR. This is accomplished 
+		;by converting every pixel to 0 over which a white graphic 
+		;has been layed.
+	
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Masking ', CURRENT_L2_PRODUCT,  ' with l2_flags band of ', CURRENT_L2_FILE, ' ...' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		
+		mband_cmd, navband=1, cmd_array=['result=b1', 'ix=where(gr1 eq 7, icnt)', 'if (icnt gt 0) then result(ix)=-999'] & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Reproject the band of CURRENT_L2_FILE corresponding to 
+		;the quality-controlled CURRENT_L2_PRODUCT to a cylindrical 
+		;coordinate system.
+		
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Reprojecting quality-controlled ', CURRENT_L2_PRODUCT,  ' band of ', CURRENT_L2_FILE, ' ...' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, '' & $
+		print, '' & $
+		
+		mapimg, bands=[3], missing=-999, xsize=FLAT_FILE_XDIM, ysize=FLAT_FILE_YDIM, limit=[FLOAT_FLAT_FILE_SOUTH, FLOAT_FLAT_FILE_WEST, FLOAT_FLAT_FILE_NORTH, FLOAT_FLAT_FILE_EAST], /CYLIN & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Write out the flat file.
+		
+		FLAT_OUT_FNAME=BASE + '_' + CURRENT_L2_PRODUCT + '_' + 'qc' + '_' + L2_FILE_RESOLUTION + '_' + STRING_FLAT_FILE_XDIM + 'x' + STRING_FLAT_FILE_YDIM + '.flat' & $
+		
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Writing ', FLAT_OUT_FNAME, ' ...' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, '' & $
+		print, '' & $
+		
+		out, FLAT_OUT_FNAME, band=4, /DATA, ftype=FLAT & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Clear up band memory and display memory for re-use. Loaded band
+		;numbers will start from 1 again. Equivalent to exiting the 
+		;display program interactively. 
+				
+		clear_up & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+	
+	
+	
+	endfor & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

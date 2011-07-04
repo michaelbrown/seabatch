@@ -1,0 +1,195 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_PATTERN='*.flat'
+FLAT_FILE_XDIM='383'
+FLAT_FILE_YDIM='191'
+
+FLAT_FILE_WEST_LON=float(-134)
+FLAT_FILE_EAST_LON=float(-132)
+FLAT_FILE_NORTH_LAT=float(70)
+FLAT_FILE_SOUTH_LAT=float(69)
+
+REGION_LON_BOUNDS=[-133.4, -133.4, -133.2, -133.2]
+REGION_LAT_BOUNDS=[69.7, 69.5, 69.5, 69.7]
+
+;Specify the time-series variables:
+TIMESERIES_RESOLUTION='1D'
+TIMESERIES_START='2002195'
+TIMESERIES_END='2002204'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='timeseries.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LON_RANGE=EAST_LON - WEST_LON
+LAT_RANGE=NORTH_LAT - SOUTH_LAT
+;help, LON_RANGE, LAT_RANGE
+
+REGION_X_INDICES=round((-WEST_LON + float(REGION_LON_BOUNDS))*((XDIM - 1)/LON_RANGE))
+REGION_Y_INDICES=round((NORTH_LAT - float(REGION_LAT_BOUNDS))*((YDIM - 1)/LAT_RANGE))
+;help, REGION_X_INDICES, REGION_Y_INDICES
+
+REGION_INDICES=polyfillv(REGION_X_INDICES,REGION_Y_INDICES,XDIM,YDIM)
+;print, REGION_INDICES
+
+REGION_DISPLAY_ARRAY=fltarr(XDIM,YDIM)
+REGION_DISPLAY_ARRAY(REGION_INDICES)=1
+
+window, 0, xsize=XDIM, ysize=YDIM
+tvscl, REGION_DISPLAY_ARRAY, /o
+MAP_SET, /CYLINDRICAL, /NOBORDER, XMARGIN=0, YMARGIN=0, /NOERASE, /ISOTROPIC, LIMIT=[SOUTH_LAT,WEST_LON,NORTH_LAT,EAST_LON]
+MAP_CONTINENTS, /COASTS, COLOR=!D.TABLE_SIZE-1, /HIRES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define YD_ARRAY, the string array whose elements range from 001-366. The 
+;elements of YD_ARRAY will be referenced to select the proper files when 
+;creating the temporal averages.
+
+YD_ARRAY=strarr(366)
+;help, YD_ARRAY
+
+for A=0,365 do begin & $
+
+	S_A=strcompress(string(A + 1), /remove_all) & $
+	
+	if A lt 9 then begin & $
+		YD_ARRAY(A)='00' + S_A & $
+	endif & $
+	
+	if A ge 9 and A lt 99 then begin & $
+		YD_ARRAY(A)='0' + S_A & $
+	endif & $
+	
+	if A ge 99 then begin & $
+		YD_ARRAY(A)=S_A & $
+	endif & $
+
+endfor
+;print, YD_ARRAY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+if YEAR MOD 4 ne 0 then N_YD=365
+if YEAR MOD 4 eq 0 then N_YD=366
+
+S_YEAR=strcompress(string(YEAR), /remove_all)
+;help, N_YD, S_YEAR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TIMESERIES_ARRAY=fltarr(2, N_YD)
+TIMESERIES_ARRAY(*)=!VALUES.F_NAN
+;help, TIMESERIES_ARRAY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+loadct, 13
+device, decompose=0
+for B=0, N_YD - 1 do begin & $
+	
+	TIMESERIES_ARRAY(0,B)=B & $
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	YD=YD_ARRAY(B) & $
+	
+	FLAT_FNAME=S_YEAR + YD + '*.f*' & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Searching for ', FLAT_FNAME, ' ...' & $
+	FLAT_FILE=file_search(FLAT_FNAME) & $
+	
+	if FLAT_FILE(0) eq '' then begin & $
+		print, 'Does NOT exist!' & $
+		continue & $
+	endif & $
+	
+	if FLAT_FILE(0) ne '' then begin & $
+		print, 'Exists: ', FLAT_FILE & $
+	endif & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	FLAT_ARRAY=fltarr(XDIM, YDIM) & $
+	
+	openr, LUN, FLAT_FILE, /get_lun & $
+	readu, LUN, FLAT_ARRAY & $
+	free_lun, LUN & $
+	
+	BAD_LOC=where(FLAT_ARRAY eq 0.0) & $
+	;help, BAD_LOC & $
+	
+	;if BAD_LOC(0) ne -1 then FLAT_ARRAY(BAD_LOC)=!VALUES.F_NAN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;window, 0, xsize=500, ysize=342 & $
+	;tv, bytscl(congrid(FLAT_ARRAY, 500, 342), min=0, max=15, /nan), /o & $
+	;MAP_SET, /CYLINDRICAL, /NOBORDER, XMARGIN=0, YMARGIN=0, /NOERASE, /ISOTROPIC, LIMIT=[SOUTH_LAT,WEST_LON,NORTH_LAT,EAST_LON] & $
+	;MAP_CONTINENTS, /COASTS, COLOR=!D.TABLE_SIZE-1, /HIRES & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+		
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	REGION_ARRAY_MEAN=mean(REGION_ARRAY, /nan) & $
+	print, 'Mean: ', REGION_ARRAY_MEAN & $
+		
+	TIMESERIES_ARRAY(1,B)=REGION_ARRAY_MEAN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+endfor
+
+;openw, lun, OUT_FNAME, /get_lun
+;printf, lun, TIMESERIES_ARRAY
+;free_lun, lun
+
+print, ''
+print, ''
+print, 'Wrote: ', OUT_FNAME

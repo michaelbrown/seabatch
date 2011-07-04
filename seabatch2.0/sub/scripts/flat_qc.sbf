@@ -1,0 +1,210 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_PATTERN='*.flat'
+FLAT_FILE_XDIM='766'
+FLAT_FILE_YDIM='383'
+
+BAD_VALUE='-999'
+GOOD_VALUE='NAN'
+
+TIME='0'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='flat_qc.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, FLOAT_BAD_VALUE,
+;FLOAT_GOOD_VALUE, and FLOAT_TIME, the result of converting FLAT_FILE_XDIM, 
+;FLAT_FILE_YDIM, BAD_VALUE, GOOD_VALUE, and TIME to floating point 
+;variables, respectively.
+
+FLOAT_FLAT_FILE_XDIM=float(FLAT_FILE_XDIM)
+FLOAT_FLAT_FILE_YDIM=float(FLAT_FILE_YDIM)
+
+FLOAT_BAD_VALUE=float(BAD_VALUE)
+
+if GOOD_VALUE eq 'NAN' then FLOAT_GOOD_VALUE=!VALUES.F_NAN
+if GOOD_VALUE ne 'NAN' then FLOAT_GOOD_VALUE=float(GOOD_VALUE)
+
+FLOAT_TIME=float(TIME)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLAT_FILES, a list of the files in the current directory whose 
+;names match the pattern specified by FLAT_FILE_PATTERN. Define 
+;FLAT_FILE_AMOUNT, the number of flat files.
+
+FLAT_FILES=findfile(FLAT_FILE_PATTERN)
+
+FLAT_FILE_AMOUNT=n_elements(FLAT_FILES)
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Flat files to be quality-controlled:'
+print, ''
+print, FLAT_FILES
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for A=0, FLAT_FILE_AMOUNT - 1 do begin & $
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define CURRENT_FLAT_FILE, the "Ath" element of FILE_FILES.
+	
+	CURRENT_FLAT_FILE=FLAT_FILES(A) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Current flat file: ', CURRENT_FLAT_FILE & $
+	
+	;Define CURRENT_FLAT_ARRAY, a floating point array containing
+	;CURRENT_FLAT_FILE.
+	
+	CURRENT_FLAT_ARRAY=fltarr(FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM) & $
+	
+	openr, LUN, CURRENT_FLAT_FILE, /get_lun & $
+	readu, LUN, CURRENT_FLAT_ARRAY & $
+	free_lun, LUN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Quality-control CURRENT_FLAT_ARRAY.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Bad value: ', BAD_VALUE & $
+	
+	;Define BAD_PIXEL_LOCATIONS; the locations of the pixels in 
+	;CURRENT_FLAT_ARRAY which have a value equal to FLOAT_BAD_VALUE.
+	
+	BAD_PIXEL_LOCATIONS=where(CURRENT_FLAT_ARRAY eq FLOAT_BAD_VALUE) & $
+	
+	;If no pixels exist in CURRENT_FLAT_ARRAY which have a value equal 
+	;to FLOAT_BAD_VALUE, then exit this iteration of the for loop and 
+	;continue on to the next one.
+	
+	if BAD_PIXEL_LOCATIONS(0) eq -1 then begin & $
+		print, '' & $
+		print, '' & $
+		print, 'No pixels exist that are equal to ', BAD_VALUE, '. Exiting current iteration of for loop ...' & $
+		print, separator & $
+		print, separator & $
+		continue & $
+	endif & $
+	
+	;Define BAD_PIXEL_AMOUNT, the number of bad pixels in 
+	;CURRENT_FLAT_ARRAY.
+	
+	BAD_PIXEL_AMOUNT=n_elements(BAD_PIXEL_LOCATIONS) & $
+	print, '' & $
+	print, '' & $
+	print, 'Number of bad pixels: ', BAD_PIXEL_AMOUNT & $
+	
+	;Define BAD_PIXEL_PERCENT, the percentage of bad pixels in 
+	;CURRENT_FLAT_ARRAY.
+	
+	BAD_PIXEL_PERCENT=((float(BAD_PIXEL_AMOUNT))/(FLOAT_FLAT_FILE_XDIM*FLOAT_FLAT_FILE_YDIM))*100 & $
+	print, 'Percent of bad pixels: ', BAD_PIXEL_PERCENT & $
+	
+	;Quality-control CURRENT_FLAT_ARRAY. Define QC_CURRENT_FLAT_ARRAY,
+	;a copy of CURRENT_FLAT_ARRAY. Convert all the bad pixels in 
+	;QC_CURRENT_FLAT_ARRAYto FLOAT_GOOD_VALUE.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Converting bad pixels to ', GOOD_VALUE, ' ...' & $
+	
+	QC_CURRENT_FLAT_ARRAY=CURRENT_FLAT_ARRAY & $
+	
+	QC_CURRENT_FLAT_ARRAY(BAD_PIXEL_LOCATIONS)=FLOAT_GOOD_VALUE & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Write out QC_CURRENT_FLAT_ARRAY to the hard drive. 
+	
+	;Define QC_CURRENT_FLAT_OUT_FILE, the filename to which
+	;QC_CURRENT_FLAT_ARRAY will be written.
+	
+	QC_CURRENT_FLAT_OUT_FILE=CURRENT_FLAT_FILE & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Writing out ', QC_CURRENT_FLAT_OUT_FILE, ' ...' & $
+	
+	openw,  LUN, QC_CURRENT_FLAT_OUT_FILE, /get_lun & $
+	writeu, LUN, QC_CURRENT_FLAT_ARRAY & $
+	free_lun, LUN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	
+	wait, FLOAT_TIME & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+

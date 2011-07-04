@@ -1,0 +1,270 @@
+###########################################################################
+###########################################################################
+function seabatch_separator {
+	echo '==========================================================================='
+	echo '==========================================================================='
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function seabatch_statement {
+	STATEMENT=${1}
+	echo $STATEMENT | fold -w75
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function seabatch_startup {
+	seabatch_separator
+	seabatch_statement "SeaBatch ${SEABATCH_VERSION}"
+	seabatch_statement "Developed by Michael Brown"
+	seabatch_statement "Department of Oceanography, Dalhousie University"
+	seabatch_statement "Last modified May 16, 2011"
+	seabatch_separator
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function exit_seabatch {
+	echo; echo; seabatch_separator
+	seabatch_statement "Exiting SeaBatch (Exit Status: $SEABATCH_EXIT_STATUS) ..."
+	seabatch_separator
+}
+###########################################################################
+###########################################################################
+	
+
+
+
+###########################################################################
+###########################################################################
+function run_seabatch_script {
+	echo; echo; seabatch_separator
+	seabatch_statement "Running ${SEABATCH_SCRIPT_NAME} v${SEABATCH_SCRIPT_VERSION}, SeaBatch v${SEABATCH_VERSION} ..."
+	seabatch_separator	
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function exit_seabatch_script {
+
+	echo; echo; seabatch_separator
+	seabatch_statement "Exiting ${SEABATCH_SCRIPT_NAME} (Exit Status: $SEABATCH_SCRIPT_EXIT_STATUS) ..."
+	seabatch_separator
+	
+	exit $SEABATCH_SCRIPT_EXIT_STATUS
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function run_seadas_batch_file {
+
+	SEADAS_BATCH_FILE=${1}
+
+	if [ $SEADAS_RUNTIME = 'YES' ]; then
+		BATCH_COMMAND="seadas -em -b $SEADAS_BATCH_FILE"
+	fi
+
+	if [ $SEADAS_RUNTIME = 'NO' ]; then
+		BATCH_COMMAND="seadas -b $SEADAS_BATCH_FILE"
+	fi
+
+	echo; echo; $BATCH_COMMAND
+
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function file_type_list {
+	
+	echo; echo; seabatch_separator
+	seabatch_statement "Running the SeaBatch function "file_type_list" ..."
+	
+	echo
+	seabatch_statement "Searching for $FILE_TYPE in the current directory ..."
+	
+	FILE_TYPE_FILE_AMOUNT=$(ls $FILE_TYPE_PATTERNS 2>/dev/null | wc -l)
+	
+	if [ $FILE_TYPE_FILE_AMOUNT -eq 0 ]; then
+	
+		echo
+		seabatch_statement "No files exist!"
+		
+	else
+	
+		if [ -e ${SEABATCH_LOG_DIRECTORY}/file_list ]; then
+		
+			echo
+			seabatch_statement "The directory ${SEABATCH_LOG_DIRECTORY}/file_list exists!"
+			
+		else
+		
+			echo
+			seabatch_statement "The directory ${SEABATCH_LOG_DIRECTORY}/file_list does NOT exist. Constructing it ..."
+			mkdir $SEABATCH_LOG_DIRECTORY/file_list
+			
+		fi
+			
+		echo
+		seabatch_statement "$FILE_TYPE_FILE_AMOUNT file(s) exist(s):"
+		
+		echo
+		ls $FILE_TYPE_PATTERNS 2>/dev/null | tee -a ${FILE_TYPE_TEXT_FILE}
+		
+		echo
+		seabatch_statement "Refer to the file ${FILE_TYPE_TEXT_FILE}"
+		
+	fi
+	
+	echo
+	seabatch_statement "Exiting the SeaBatch function "file_type_list" ..."
+	seabatch_separator
+				
+}
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+function script_error_action {
+
+	echo; echo; seabatch_separator
+	seabatch_statement "Running the SeaBatch function script_error_action ..."
+
+	FILE=${1}
+
+	echo; seabatch_statement "WARNING: ${SCRIPT_NAME} errored on ${FILE}"
+		
+	case $SCRIPT_ERROR_ACTION in
+
+		'DEFAULT')
+
+			echo; seabatch_statement "Using the default script error action specified in ${SEABATCH_CONFIGURATION_DIRECTORY}/seabatch.cfg ..."
+			SCRIPT_ERROR_ACTION=$DEFAULT_SCRIPT_ERROR_ACTION
+			
+		;;
+
+		'EXIT' | 'MOVE' | 'COPY')
+
+			echo; seabatch_statement "Using the script error action specified in ${SEABATCH_SCRIPT_NAME} ..."
+			SCRIPT_ERROR_ACTION=$SCRIPT_ERROR_ACTION
+			
+		;;
+
+		*)
+
+			echo; seabatch_statement "WARNING: the the script error action specified in ${SEABATCH_SCRIPT_NAME} is not valid! Using the default script error action specified in ${SEABATCH_CONFIGURATION_DIRECTORY}/seabatch.cfg ..."
+			SCRIPT_ERROR_ACTION=$DEFAULT_SCRIPT_ERROR_ACTION
+
+		;;
+
+	esac
+
+	echo; seabatch_statement "SCRIPT_ERROR_ACTION is set to: $SCRIPT_ERROR_ACTION"
+		
+	if [ $SCRIPT_ERROR_ACTION = 'EXIT' ]; then
+
+		echo; seabatch_statement "SeaBatch will be exited."
+
+		echo; seabatch_statement "Exiting the SeaBatch function script_error_action ..."
+		seabatch_separator
+		
+		SEABATCH_SCRIPT_EXIT_STATUS=1
+		exit_seabatch_script
+
+	fi
+
+	if [ $SCRIPT_ERROR_ACTION = 'MOVE' ]; then
+
+		echo; seabatch_statement "${FILE} will be moved to the respective error directory."
+		
+		SCRIPT_ERROR_DIRECTORY=${SEABATCH_LOG_DIRECTORY}'/error/'${SCRIPT_NAME}
+
+		echo $SCRIPT_ERROR_DIRECTORY
+
+		mkdir -p $SCRIPT_ERROR_DIRECTORY
+
+		echo; seabatch_statement "Moving ${FILE} to ${SCRIPT_ERROR_DIRECTORY} ..."
+
+		mv ${FILE} ${SCRIPT_ERROR_DIRECTORY}
+
+		echo; seabatch_statement "SeaBatch will continue on to the next file to be processed ..."
+
+		echo; seabatch_statement "Exiting the SeaBatch function script_error_action ..."
+		seabatch_separator
+
+		continue
+
+	fi
+		
+	if [ $SCRIPT_ERROR_ACTION = 'COPY' ]; then
+
+		echo; seabatch_statement "${FILE} will be copied (not moved!) to the respective error directory so that the original remains for further processing."
+
+		case $SCRIPT_NAME in
+
+			'l2bin')
+
+				SCRIPT_ERROR_DIRECTORY=${SEABATCH_LOG_DIRECTORY}'/error/'${SCRIPT_NAME}'/'${SPATIAL_BIN}'km'
+			
+			;;
+	
+			*)
+
+				SCRIPT_ERROR_DIRECTORY=${SEABATCH_LOG_DIRECTORY}'/error/'${SCRIPT_NAME}
+
+			;;
+
+		esac
+		
+		mkdir -p $SCRIPT_ERROR_DIRECTORY
+
+		echo; seabatch_statement "Copying ${FILE} to ${SCRIPT_ERROR_DIRECTORY} ..."
+
+		cp ${FILE} ${SCRIPT_ERROR_DIRECTORY}
+
+		echo; seabatch_statement "SeaBatch will continue on to the next file to be processed ..."
+
+		echo; seabatch_statement "Exiting the SeaBatch function script_error_action ..."
+		seabatch_separator
+
+		continue
+
+	fi
+
+}
+###########################################################################
+###########################################################################

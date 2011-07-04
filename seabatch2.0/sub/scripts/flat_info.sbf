@@ -1,0 +1,243 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_PATTERN='*.flat'
+FLAT_FILE_XDIM='766'
+FLAT_FILE_YDIM='383'
+
+VALUE='-16.3835010529'
+
+TIME='0'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='flat_info.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, FLOAT_VALUE, and 
+;FLOAT_TIME, the result of converting FLAT_FILE_XDIM, FLAT_FILE_YDIM, VALUE, 
+;and TIME to floating point variables.
+
+FLOAT_FLAT_FILE_XDIM=float(FLAT_FILE_XDIM)
+FLOAT_FLAT_FILE_YDIM=float(FLAT_FILE_YDIM)
+
+if VALUE ne 'NO' then begin & $
+	if VALUE ne 'NAN' then FLOAT_VALUE=float(VALUE) & $
+endif
+
+FLOAT_TIME=float(TIME)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLAT_FILES, a list of the files in the current directory whose 
+;names match the pattern specified by FLAT_FILE_PATTERN. Define 
+;FLAT_FILE_AMOUNT, the number of flat files.
+FLAT_FILES=findfile(FLAT_FILE_PATTERN)
+
+FLAT_FILE_AMOUNT=n_elements(FLAT_FILES)
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Flat files to be analyzed:'
+print, ''
+print, FLAT_FILES
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for A=0, FLAT_FILE_AMOUNT - 1 do begin & $
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define CURRENT_FLAT_FILE, the "Ath" element of FILE_FILES.
+	CURRENT_FLAT_FILE=FLAT_FILES(A) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Current flat file: ', CURRENT_FLAT_FILE & $
+	
+	;Define CURRENT_FLAT_ARRAY, a floating point array containing
+	;CURRENT_FLAT_FILE.
+	CURRENT_FLAT_ARRAY=fltarr(FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM) & $
+	
+	openr, LUN, CURRENT_FLAT_FILE, /get_lun & $
+	readu, LUN, CURRENT_FLAT_ARRAY & $
+	free_lun, LUN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Display information about CURRENT_FLAT_ARRAY.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Info:' & $
+	
+	;Define _CURRENT_FLAT_ARRAY_PIXEL_AMOUNT, the number of pixels in 
+	;CURRENT_FLAT_ARRAY.
+	
+	CURRENT_FLAT_ARRAY_PIXEL_AMOUNT=(FLOAT_FLAT_FILE_XDIM*FLOAT_FLAT_FILE_YDIM) & $
+	
+	;Define NAN_PIXEL_LOCATIONS, the locations of the pixels in 
+	;CURRENT_FLAT_ARRAY which have an undefined value. 
+	
+	NAN_PIXEL_LOCATIONS=where(finite(CURRENT_FLAT_ARRAY) eq 0) & $
+	
+	;Define NAN_PIXEL_AMOUNT, the number of pixels in CURRENT_FLAT_ARRAY
+	;which have an undefined value.
+	
+	if NAN_PIXEL_LOCATIONS(0) eq -1 then NAN_PIXEL_AMOUNT=0 & $
+	if NAN_PIXEL_LOCATIONS(0) ne -1 then NAN_PIXEL_AMOUNT=n_elements(NAN_PIXEL_LOCATIONS) & $
+	
+	;
+	
+	if NAN_PIXEL_AMOUNT eq CURRENT_FLAT_ARRAY_PIXEL_AMOUNT then begin & $
+		print, '' & $
+		print, '' & $
+		print, 'No finite data exists.' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		continue & $
+	endif & $
+	
+	if VALUE ne 'NO' then begin & $
+	
+		;Define VALUE_PIXEL_LOCATIONS, the locations of the pixels 
+		;in CURRENT_FLAT_ARRAY which have a value equal to 
+		;FLOAT_VALUE.
+		if VALUE eq 'NAN' then VALUE_PIXEL_LOCATIONS=NAN_PIXEL_LOCATIONS & $
+		if VALUE ne 'NAN' then VALUE_PIXEL_LOCATIONS=where(CURRENT_FLAT_ARRAY eq FLOAT_VALUE) & $
+	
+		;Define VALUE_PIXEL_AMOUNT, the number of pixels in 
+		;CURRENT_FLAT_ARRAY which have a value equal to FLOAT_VALUE.
+		if VALUE_PIXEL_LOCATIONS(0) eq -1 then VALUE_PIXEL_AMOUNT=0 & $
+		if VALUE_PIXEL_LOCATIONS(0) ne -1 then VALUE_PIXEL_AMOUNT=n_elements(VALUE_PIXEL_LOCATIONS) & $
+	
+		;Define VALUE_PIXEL_PERCENT, the percentage of pixels in 
+		;CURRENT_FLAT_ARRAY which have a value equal to FLOAT_VALUE.
+		VALUE_PIXEL_PERCENT=(float(VALUE_PIXEL_AMOUNT)/CURRENT_FLAT_ARRAY_PIXEL_AMOUNT)*100 & $
+	
+		print, '' & $
+		print, '' & $
+		if VALUE eq 'NAN' then print, 'Value: NAN' & $
+		if VALUE ne 'NAN' then print, 'Value: ', FLOAT_VALUE & $
+		print, 'Pixel amount: ', VALUE_PIXEL_AMOUNT & $
+		print, 'Pixel percent: ', VALUE_PIXEL_PERCENT & $
+		
+	endif & $
+	
+	;Define MIN and MAX, the minimum and maximum values of 
+	;CURRENT_FLAT_ARRAY, respectively.
+	MIN=min(CURRENT_FLAT_ARRAY, /nan) & $
+	MAX=max(CURRENT_FLAT_ARRAY, /nan) & $
+	
+	;Define MIN_PIXEL_LOCATIONS and MAX_PIXEL_LOCATIONS, the locations 
+	;of the pixels in CURRENT_FLAT_ARRAY which have a value equal to MIN 
+	;and MAX,respectively.
+	
+	MIN_PIXEL_LOCATIONS=where(CURRENT_FLAT_ARRAY eq MIN) & $
+	MAX_PIXEL_LOCATIONS=where(CURRENT_FLAT_ARRAY eq MAX) & $
+	
+	;Define MIN_PIXEL_AMOUNT and MAX_PIXEL_AMOUNT, the number of pixels 
+	;in CURRENT_FLAT_ARRAY which have a value equal to MIN and MAX, 
+	;respectively.
+	
+	MIN_PIXEL_AMOUNT=n_elements(MIN_PIXEL_LOCATIONS) & $
+	MAX_PIXEL_AMOUNT=n_elements(MAX_PIXEL_LOCATIONS) & $
+	
+	;Define MIN_PIXEL_PERCENT and MAX_PIXEL_PERCENT, the percentage of 
+	;pixels in CURRENT_FLAT_ARRAY which have a value equal to MIN and 
+	;MAX, respectively.
+	
+	MIN_PIXEL_PERCENT=(float(MIN_PIXEL_AMOUNT)/CURRENT_FLAT_ARRAY_PIXEL_AMOUNT)*100 & $
+	MAX_PIXEL_PERCENT=(float(MAX_PIXEL_AMOUNT)/CURRENT_FLAT_ARRAY_PIXEL_AMOUNT)*100 & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Min: ', MIN & $
+	print, 'Pixel amount: ', MIN_PIXEL_AMOUNT & $
+	print, 'Pixel percent: ', MIN_PIXEL_PERCENT & $
+	print, '' & $
+	print, '' & $
+	print, 'Max: ', MAX & $
+	print, 'Pixel amount: ', MAX_PIXEL_AMOUNT & $
+	print, 'Pixel percent: ', MAX_PIXEL_PERCENT & $
+	
+	;Define CURRENT_FLAT_ARRAY_MEAN, the mean of CURRENT_FLAT_ARRAY.
+	CURRENT_FLAT_ARRAY_MEAN=mean(CURRENT_FLAT_ARRAY, /double, /nan) & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Mean: ', CURRENT_FLAT_ARRAY_MEAN & $
+	
+	;Define CURRENT_FLAT_ARRAY_STDDEV, the standard deviation of 
+	;CURRENT_FLAT_ARRAY. 
+	
+	CURRENT_FLAT_ARRAY_STDDEV=stddev(CURRENT_FLAT_ARRAY, /double, /nan) & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Standard Deviation: ', CURRENT_FLAT_ARRAY_STDDEV & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	
+	wait, FLOAT_TIME & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

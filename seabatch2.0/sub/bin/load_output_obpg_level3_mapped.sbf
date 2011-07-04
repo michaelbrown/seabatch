@@ -1,0 +1,520 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;This script ...
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+SEABATCH_SEPARATOR='==========================================================================='
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define SEABATCH_SCRIPT_NAME and SEABATCH_SCRIPT_VERSION, the name and
+;version of the current script.
+
+SEABATCH_SCRIPT_NAME='load_output_obpg_level3_mapped.sh'
+SEABATCH_SCRIPT_VERSION='2.0'
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ' v', SEABATCH_SCRIPT_VERSION, ', SeaBatch v2.0 ...'
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define variables read in from "load_output_parameter_file.txt".
+
+openr, LUN, 'load_output_parameter_file.txt', /get_lun
+
+;Read in SENSOR.
+SENSOR=''
+readf, LUN, SENSOR
+
+;Read in YEAR.
+readf, LUN, YEAR
+
+;Read in WEST, EAST, NORTH and SOUTH.
+readf, LUN, WEST
+readf, LUN, EAST
+readf, LUN, NORTH
+readf, LUN, SOUTH
+
+;Define STRING_WEST, STRING_EAST, STRING_NORTH and STRING_SOUTH, the 
+;results of converting WEST, EAST, NORTH and SOUTH to strings.
+STRING_WEST=strcompress(string(WEST),/remove_all)
+STRING_EAST=strcompress(string(EAST),/remove_all)
+STRING_NORTH=strcompress(string(NORTH),/remove_all)
+STRING_SOUTH=strcompress(string(SOUTH),/remove_all)
+
+;Define LONGITUDE_RANGE and LATITUDE_RANGE, the longitude and latitude 
+;ranges of the region of interest.
+LONGITUDE_RANGE=EAST - WEST
+LATITUDE_RANGE=NORTH - SOUTH
+
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
+
+;Read in OUTPUT_PRODUCTS.
+readf, LUN, OUTPUT_PRODUCT_AMOUNT
+OUTPUT_PRODUCTS=strarr(OUTPUT_PRODUCT_AMOUNT)
+for A=0,OUTPUT_PRODUCT_AMOUNT - 1 do begin & $
+
+	OUTPUT_PRODUCT='' & $
+	readf, LUN, OUTPUT_PRODUCT & $
+	OUTPUT_PRODUCTS(A)=OUTPUT_PRODUCT & $
+
+endfor
+
+;Read in OUTPUT_FILE_TYPES.
+readf, LUN, OUTPUT_FILE_TYPE_AMOUNT
+OUTPUT_FILE_TYPES=strarr(OUTPUT_FILE_TYPE_AMOUNT)
+for B=0,OUTPUT_FILE_TYPE_AMOUNT - 1 do begin & $
+
+	OUTPUT_FILE_TYPE='' & $
+	readf, LUN, OUTPUT_FILE_TYPE & $
+	OUTPUT_FILE_TYPES(B)=OUTPUT_FILE_TYPE & $
+
+endfor
+
+;Read in COLOR_TABLE_SETTING.
+COLOR_TABLE_SETTING=''
+readf, LUN, COLOR_TABLE_SETTING
+
+;Read in COLOR_TABLE_DIRECTORY.
+COLOR_TABLE_DIRECTORY=''
+readf, LUN, COLOR_TABLE_DIRECTORY
+
+;Read in COLOR_TABLE_SUBDIRECTORIES.
+readf, LUN, COLOR_TABLE_SUBDIRECTORY_AMOUNT
+COLOR_TABLE_SUBDIRECTORIES=strarr(COLOR_TABLE_SUBDIRECTORY_AMOUNT) & $
+for C=0,COLOR_TABLE_SUBDIRECTORY_AMOUNT - 1 do begin & $
+
+	COLOR_TABLE_SUBDIRECTORY='' & $
+	readf, LUN, COLOR_TABLE_SUBDIRECTORY & $
+	COLOR_TABLE_SUBDIRECTORIES(C)=COLOR_TABLE_SUBDIRECTORY & $
+
+endfor
+
+;Read in COLOR_TABLE_NUMBERS.
+readf, LUN, COLOR_TABLE_NUMBER_AMOUNT
+COLOR_TABLE_NUMBERS=intarr(COLOR_TABLE_NUMBER_AMOUNT)
+for D=0,COLOR_TABLE_NUMBER_AMOUNT - 1 do begin & $
+
+	readf, LUN, COLOR_TABLE_NUMBER & $
+	COLOR_TABLE_NUMBERS(D)=COLOR_TABLE_NUMBER & $
+
+endfor
+
+;Define COLOR_TABLES, the color tables to be used, with the elements of 
+;COLOR_TABLE_SUBDIRECTORIES and COLOR_TABLE_NUMBERS.
+COLOR_TABLES=strarr(1,COLOR_TABLE_SUBDIRECTORY_AMOUNT)
+for E=0,COLOR_TABLE_SUBDIRECTORY_AMOUNT - 1 do begin & $
+
+	COLOR_TABLE_SUBDIRECTORY=COLOR_TABLE_SUBDIRECTORIES(E) & $
+	COLOR_TABLE_NUMBER=COLOR_TABLE_NUMBERS(E) & $
+
+	if COLOR_TABLE_SUBDIRECTORY eq 'C' then GOOD_COLOR_TABLES=findfile(COLOR_TABLE_DIRECTORY + '/custom/*') & $
+	if COLOR_TABLE_SUBDIRECTORY eq 'I' then GOOD_COLOR_TABLES=findfile(COLOR_TABLE_DIRECTORY + '/idl/*') & $
+	if COLOR_TABLE_SUBDIRECTORY eq 'S' then GOOD_COLOR_TABLES=findfile(COLOR_TABLE_DIRECTORY + '/standard/*') & $
+	
+	COLOR_TABLE=GOOD_COLOR_TABLES(COLOR_TABLE_NUMBER - 1) & $
+		
+	COLOR_TABLES(E)=COLOR_TABLE & $
+
+endfor
+
+free_lun, LUN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Display the processing variables used by load_ouput.sbf.
+
+print, '' 
+print, '' 
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
+print, ''
+print, '- SENSOR: ', SENSOR 
+print, '- YEAR: ', YEAR
+print, '- WEST: ', WEST
+print, '- EAST: ', EAST
+print, '- NORTH: ', NORTH
+print, '- SOUTH: ', SOUTH
+print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- LONGITUDE_RANGE: ', LONGITUDE_RANGE 
+print, '- LATITUDE_RANGE: ', LATITUDE_RANGE
+print, '- OUTPUT_PRODUCTS: ', OUTPUT_PRODUCTS
+print, '- OUTPUT_FILE_TYPES: ', OUTPUT_FILE_TYPES
+print, '- COLOR_TABLE_SETTING: ', COLOR_TABLE_SETTING
+print, '- COLOR_TABLE_DIRECTORY: ', COLOR_TABLE_DIRECTORY
+print, '- COLOR_TABLE_SUBDIRECTORIES: ', COLOR_TABLE_SUBDIRECTORIES
+print, '- COLOR_TABLE_NUMBERS: ', COLOR_TABLE_NUMBERS
+print, '- COLOR_TABLES:'
+print, COLOR_TABLES
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define OBPG_L3_MAPPED_FILE_PATTERNS.
+
+OBPG_L3_MAPPED_FILE_PATTERNS=transpose(['*.L3m*'])
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Searching for OBPG Level-3 Mapped files in the current directory ...'
+print, ''
+print, 'Files whose filenames match the following patterns will be considered valid:'
+print, ''
+print, OBPG_L3_MAPPED_FILE_PATTERNS
+
+OBPG_L3_MAPPED_FILE_PATTERN_AMOUNT=n_elements(OBPG_L3_MAPPED_FILE_PATTERNS)
+
+OBPG_L3_MAPPED_FILE_AMOUNT=0
+
+for F=0,OBPG_L3_MAPPED_FILE_PATTERN_AMOUNT - 1 do begin & $
+
+	OBPG_L3_MAPPED_FILE_PATTERN=OBPG_L3_MAPPED_FILE_PATTERNS(F) & $
+
+	print, '' & $
+	print, 'Searching for files whose filenames match the pattern ', OBPG_L3_MAPPED_FILE_PATTERN, ' in the current directory ...' & $
+
+	OBPG_L3_MAPPED_FILE_PATTERN_FILES=findfile(OBPG_L3_MAPPED_FILE_PATTERN) & $
+
+	if OBPG_L3_MAPPED_FILE_PATTERN_FILES(0) eq '' then begin & $
+
+		OBPG_L3_MAPPED_FILE_PATTERN_FILE_AMOUNT=0 & $
+		
+		print, '' & $
+		print, 'No files exist!' & $
+
+	endif & $
+
+	if OBPG_L3_MAPPED_FILE_PATTERN_FILES(0) ne '' then begin & $
+
+		OBPG_L3_MAPPED_FILE_PATTERN_FILES=transpose(OBPG_L3_MAPPED_FILE_PATTERN_FILES) & $
+
+		OBPG_L3_MAPPED_FILE_PATTERN_FILE_AMOUNT=n_elements(OBPG_L3_MAPPED_FILE_PATTERN_FILES) & $
+			
+		print, '' & $
+		print, strcompress(string(OBPG_L3_MAPPED_FILE_PATTERN_FILE_AMOUNT), /remove_all), ' file(s) exist(s):' & $
+		print, '' & $
+		print, OBPG_L3_MAPPED_FILE_PATTERN_FILES & $
+
+		if OBPG_L3_MAPPED_FILE_AMOUNT eq 0 then OBPG_L3_MAPPED_FILES=OBPG_L3_MAPPED_FILE_PATTERN_FILES & $
+		if OBPG_L3_MAPPED_FILE_AMOUNT ne 0 then OBPG_L3_MAPPED_FILES=[[OBPG_L3_MAPPED_FILES],[OBPG_L3_MAPPED_FILE_PATTERN_FILES]] & $
+
+		OBPG_L3_MAPPED_FILE_AMOUNT=OBPG_L3_MAPPED_FILE_AMOUNT + OBPG_L3_MAPPED_FILE_PATTERN_FILE_AMOUNT & $
+
+	endif & $
+
+endfor
+
+if OBPG_L3_MAPPED_FILE_AMOUNT eq 0 then begin & $
+
+	print, '' & $
+	print, 'No OBPG Level-3 Mapped files exist in the current directory!' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+endif & $
+
+if OBPG_L3_MAPPED_FILE_AMOUNT ne 0 then begin & $
+
+	print, '' & $
+	print, strcompress(string(OBPG_L3_MAPPED_FILE_AMOUNT), /remove_all), ' OBPG Level-3 Mapped file(s) exist(s) in the current directory:' & $
+	print, '' & $
+	print, OBPG_L3_MAPPED_FILES & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+for G=0,OBPG_L3_MAPPED_FILE_AMOUNT - 1 do begin & $
+
+	OBPG_L3_MAPPED_FILE=OBPG_L3_MAPPED_FILES(G) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Current OBPG Level-3 Mapped file: ', OBPG_L3_MAPPED_FILE & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+	PERIOD_POSITION=strpos(OBPG_L3_MAPPED_FILE, '.') & $
+	BASE=strmid(OBPG_L3_MAPPED_FILE, 0, PERIOD_POSITION) + '_' + strmid(OBPG_L3_MAPPED_FILE, PERIOD_POSITION + 1) & $
+
+	for H=0,OUTPUT_FILE_TYPE_AMOUNT - 1 do begin & $
+
+		OUTPUT_FILE_TYPE=OUTPUT_FILE_TYPES(H) & $
+
+		case OUTPUT_FILE_TYPE of & $
+
+			'png': DISPLAY='YES' & $
+			'kmz': DISPLAY='YES' & $
+			else: DISPLAY='NO' & $
+
+		endcase & $
+
+		print, '' & $
+		print, '' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, 'Current output file type: ', OUTPUT_FILE_TYPE, ' (DISPLAY = ', DISPLAY, ')' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+
+		;Load the band of CURRENT_OUT_PRDCT.
+
+		print, '' & $
+		print, '' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, 'Loading first band of ', OBPG_L3_MAPPED_FILE, ' ...'  & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, '' & $
+		print, '' & $
+				
+		load, OBPG_L3_MAPPED_FILE, limit=[SOUTH, WEST, NORTH, EAST], /loadpal & $
+
+		if DISPLAY eq 'YES' then begin & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Displaying loaded first band of ', OBPG_L3_MAPPED_FILE, ' into the SeaDAS memory...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+
+			display, band_no=1 & $
+			
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Overlaying coastline ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			
+			coast & $
+
+		endif & $
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Write out the ascii file.
+
+		if OUTPUT_FILE_TYPE eq 'asc' then begin & $
+			ASCII_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'.asc' & $
+			out_ascii, ASCII_OUT_FNAME, band_no=1, vars=[2,3,4] & $
+		endif & $
+				
+		;Write out the flat file. & $
+		if OUTPUT_FILE_TYPE eq 'flat' then begin & $
+			FLAT_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'_'+S_XDIM+'x'+S_YDIM+'.flat' & $
+			out, FLAT_OUT_FNAME, band=1, /DATA, ftype=FLAT & $
+		endif & $
+				
+		;Write out the hdf file. & $
+		if OUTPUT_FILE_TYPE eq 'hdf' then begin & $
+			HDF_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'.hdf' & $
+			out, HDF_OUT_FNAME, band=1, /DATA, ftype=HDF & $
+			out, HDF_OUT_FNAME, band=1, /NAV, ftype=HDF, append=1 & $
+		endif & $
+				
+		;Write out the png. & $
+		if OUTPUT_FILE_TYPE eq 'png' then begin & $
+
+			PNG_FILE_NAME=BASE + '.png' & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Constructing ', PNG_FILE_NAME, ' ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, '' & $
+			print, '' & $
+
+			out, PNG_FILE_NAME, /DISPLAY, ftype=PNG & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Wrote ', PNG_FILE_NAME, '!'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+
+		endif & $
+				
+		;Write out the kmz file. & $
+		if OUTPUT_FILE_TYPE eq 'kmz' then begin & $
+			
+			PNG_FILE_NAME=BASE + '_kmz.png' & $
+			KML_FILE_NAME=BASE + '.kml' & $
+			KMZ_FILE_NAME=BASE + '.kmz' & $
+					
+			;First write out the kmz png file. & $
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Constructing ', PNG_FILE_NAME, ' ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, '' & $
+			print, '' & $
+
+			out, PNG_FILE_NAME, /DISPLAY, ftype=PNG & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Wrote ', PNG_FILE_NAME, '!'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+
+			;Then write out the kmz text file. & $
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Constructing ', KML_FILE_NAME, ' ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+					
+			openw, LUN, KML_FILE_NAME, /get_lun & $
+			printf, LUN, '<?xml version="1.0" encoding="UTF-8"?>' & $
+			printf, LUN, '<kml xmlns="http://www.opengis.net/kml/2.2">' & $
+			printf, LUN, '	<GroundOverlay>' & $
+			printf, LUN, '		<Icon>' & $
+        		printf, LUN, '			<href>' + PNG_FILE_NAME + '</href>' & $
+     			printf, LUN, '		</Icon>' & $
+			printf, LUN, '		<LatLonBox>' & $
+        		printf, LUN, '			<north>' + STRING_NORTH + '</north>' & $
+        		printf, LUN, '			<south>' + STRING_SOUTH + '</south>' & $
+			printf, LUN, '			<east>' + STRING_EAST + '</east>' & $
+			printf, LUN, '			<west>' + STRING_WEST + '</west>' & $
+      			printf, LUN, '		</LatLonBox>' & $
+			printf, LUN, '	</GroundOverlay>' & $
+			printf, LUN, '</kml>' & $
+			free_lun, LUN & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Wrote ', KML_FILE_NAME, '!'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+					
+			;Zip the kmz png and text files into a kmz file.
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Constructing ', KMZ_FILE_NAME, ' ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, '' & $
+			print, '' & $
+
+			KMZ_COMMAND='zip' + ' ' + KMZ_FILE_NAME + ' ' + PNG_FILE_NAME + ' ' + KML_FILE_NAME & $
+			spawn, KMZ_COMMAND & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Wrote ', KMZ_FILE_NAME, '!'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+
+			print, '' & $
+			print, '' & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+			print, 'Removing ', PNG_FILE_NAME, ' and ', KML_FILE_NAME, ' ...'  & $
+			print, SEABATCH_SEPARATOR & $
+			print, SEABATCH_SEPARATOR & $
+					
+			;Finally remove the kmz png and text files. & $
+			REMOVE_PNG_KML_COMMAND='rm' + ' ' + PNG_FILE_NAME + ' ' + KML_FILE_NAME & $
+			spawn, REMOVE_PNG_KML_COMMAND & $
+					
+		endif & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Clear up band memory and display memory for re-use. Loaded 
+		;band numbers will start from 1 again. Equivalent to exiting 
+		;the display program interactively. 
+				
+		clear_up & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+	endfor & $
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+

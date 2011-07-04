@@ -1,0 +1,453 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;This script ...
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+SEABATCH_SEPARATOR='==========================================================================='
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define SEABATCH_SCRIPT_NAME and SEABATCH_SCRIPT_VERSION, the name and
+;version of the current script.
+
+SEABATCH_SCRIPT_NAME='load_output.sbf'
+SEABATCH_SCRIPT_VERSION='2.0'
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ' v', SEABATCH_SCRIPT_VERSION, ', SeaBatch v2.0 ...'
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define variables read in from "load_output_parameter_file.txt".
+
+openr, LUN, 'load_output_parameter_file.txt', /get_lun
+
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
+
+;Read in LOADED_FILE.
+LOADED_FILE=''
+readf, LUN, LOADED_FILE
+
+;Read in OUTPUT_PRODUCT.
+OUTPUT_PRODUCT=''
+readf, LUN, OUTPUT_PRODUCT
+
+;Read in OUTPUT_STATISTIC.
+OUTPUT_STATISTIC=''
+readf, LUN, OUTPUT_STATISTIC
+
+;Read in BASENAME.
+BASENAME=''
+readf, LUN, BASENAME
+
+;Read in FORCED_LOAD_X_DIMENSION and FORCED_LOAD_Y_DIMENSION.
+FORCED_LOAD_X_DIMENSION=''
+FORCED_LOAD_Y_DIMENSION=''
+readf, LUN, FORCED_LOAD_X_DIMENSION
+readf, LUN, FORCED_LOAD_Y_DIMENSION
+
+;Read in MINIMUM_LOAD_DIMENSION.
+MINIMUM_LOAD_DIMENSION=''
+readf, LUN, MINIMUM_LOAD_DIMENSION
+
+;Read in WEST, EAST, NORTH, and SOUTH.
+WEST=''
+EAST=''
+NORTH=''
+SOUTH=''
+readf, LUN, WEST
+readf, LUN, EAST
+readf, LUN, NORTH
+readf, LUN, SOUTH
+
+;Read in LOAD_X_DIMENSION and LOAD_Y_DIMENSION.
+LOAD_X_DIMENSION=''
+LOAD_Y_DIMENSION=''
+readf, LUN, LOAD_X_DIMENSION
+readf, LUN, LOAD_Y_DIMENSION
+
+;Read in MODIS_SST_QUALITY.
+MODIS_SST_QUALITY=''
+readf, LUN, MODIS_SST_QUALITY
+
+;Read in OUTPUT_FILE_TYPE
+OUTPUT_FILE_TYPE=''
+readf, LUN, OUTPUT_FILE_TYPE
+
+;Read in DISPLAY_SETTING
+DISPLAY_SETTING=''
+readf, LUN, DISPLAY_SETTING
+
+;Read in DISPLAY_LUT
+DISPLAY_LUT=''
+readf, LUN, DISPLAY_LUT
+
+;Read in DISPLAY_MIN
+DISPLAY_MIN=''
+readf, LUN, DISPLAY_MIN
+
+;Read in DISPLAY_MAX
+DISPLAY_MAX=''
+readf, LUN, DISPLAY_MAX
+
+;Read in DISPLAY_TYPE
+DISPLAY_TYPE=''
+readf, LUN, DISPLAY_TYPE
+
+;Read in COASTLINE.
+COASTLINE=''
+readf, LUN, COASTLINE
+
+;Read in COASTLINE_COLOR
+COASTLINE_COLOR=''
+readf, LUN, COASTLINE_COLOR
+
+;Read in COASTLINE_RESOLUTION
+COASTLINE_RESOLUTION=''
+readf, LUN, COASTLINE_RESOLUTION
+
+;Read in COLOR_BAR.
+COLOR_BAR=''
+readf, LUN, COLOR_BAR
+
+;Read in COLOR_BAR_ORIENTATION.
+COLOR_BAR_ORIENTATION=''
+readf, LUN, COLOR_BAR_ORIENTATION
+
+free_lun, LUN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Display the processing variables used by basename.sbf.
+
+print, '' 
+print, '' 
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
+print, ''
+print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- LOADED_FILE: ', LOADED_FILE
+print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
+print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
+print, '- BASENAME: ', BASENAME
+print, '- FORCED_LOAD_X_DIMENSION: ', FORCED_LOAD_X_DIMENSION
+print, '- FORCED_LOAD_Y_DIMENSION: ', FORCED_LOAD_Y_DIMENSION
+print, '- MINIMUM_LOAD_DIMENSION: ', MINIMUM_LOAD_DIMENSION
+print, '- WEST: ', WEST
+print, '- EAST: ', EAST
+print, '- NORTH: ', NORTH
+print, '- SOUTH: ', SOUTH
+print, '- LOAD_X_DIMENSION: ', LOAD_X_DIMENSION
+print, '- LOAD_Y_DIMENSION: ', LOAD_Y_DIMENSION
+print, '- MODIS_SST_QUALITY: ', MODIS_SST_QUALITY
+print, '- OUTPUT_FILE_TYPE: ', OUTPUT_FILE_TYPE
+print, '- DISPLAY_SETTING: ', DISPLAY_SETTING
+print, '- DISPLAY_LUT: ', DISPLAY_LUT
+print, '- DISPLAY_MIN: ', DISPLAY_MIN
+print, '- DISPLAY_MAX: ', DISPLAY_MAX
+print, '- DISPLAY_TYPE: ', DISPLAY_TYPE
+print, '- COASTLINE: ', COASTLINE
+print, '- COASTLINE_COLOR: ', COASTLINE_COLOR
+print, '- COASTLINE_RESOLUTION: ', COASTLINE_RESOLUTION
+print, '- COLOR_BAR: ', COLOR_BAR
+print, '- COLOR_BAR_ORIENTATION: ', COLOR_BAR_ORIENTATION
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+
+if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Loading and reprojecting ', OUTPUT_PRODUCT, ' band of ', LOADED_FILE, ' ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+
+	load, LOADED_FILE, prod_name=OUTPUT_PRODUCT, cat_no=1, missing=0.0, xsize=float(LOAD_X_DIMENSION), ysize=float(LOAD_Y_DIMENSION), limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /CYLINDRICAL & $
+
+endif 
+
+if LOADED_FILE_TYPE eq 'OBPG_L3_SMI_OC' or LOADED_FILE_TYPE eq 'OBPG_L3_SMI_MODIS_SST' then begin & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Loading and reprojecting the first band of ', LOADED_FILE, ' ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+
+	if LOADED_FILE_TYPE eq 'OBPG_L3_SMI_OC' then begin & $
+
+		load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /loadpal & $
+	
+	endif & $
+
+	if LOADED_FILE_TYPE eq 'OBPG_L3_SMI_MODIS_SST' then begin & $
+
+		if MODIS_SST_QUALITY eq '0' then load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], sst_qual_ix=[1, 0, 0, 0, 0], /loadpal & $
+		if MODIS_SST_QUALITY eq '1' then load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], sst_qual_ix=[1, 1, 0, 0, 0], /loadpal & $
+		if MODIS_SST_QUALITY eq '2' then load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], sst_qual_ix=[1, 1, 1, 0, 0], /loadpal & $
+		if MODIS_SST_QUALITY eq '3' then load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], sst_qual_ix=[1, 1, 1, 1, 0], /loadpal & $
+		if MODIS_SST_QUALITY eq '4' then load, LOADED_FILE, limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], sst_qual_ix=[1, 1, 1, 1, 1], /loadpal & $	
+
+	endif & $
+
+endif 
+
+
+if DISPLAY_SETTING eq 'YES' then begin & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Displaying loaded band of ', LOADED_FILE, ' into the SeaDAS memory...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+	display, band_no=1, smin=float(DISPLAY_MIN), smax=float(DISPLAY_MAX), stype=DISPLAY_TYPE, /GEO & $
+
+	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
+	
+		print, '' & $
+		print, '' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, 'Applying color lut: ', DISPLAY_LUT, ' ...'  & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+
+		loadpal, DISPLAY_LUT & $
+
+	endif & $
+
+	if COASTLINE eq 'YES' then begin & $
+
+		print, '' & $
+		print, '' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, 'Overlaying coastline ...'  & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+			
+		coast, color=float(COASTLINE_COLOR), hires=float(COASTLINE_RESOLUTION) & $
+					
+	endif & $
+
+	if COLOR_BAR eq 'YES' then begin & $
+
+		print, '' & $
+		print, '' & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+		print, 'Appending colorbar ...'  & $
+		print, SEABATCH_SEPARATOR & $
+		print, SEABATCH_SEPARATOR & $
+
+		cbar, orient=COLOR_BAR_ORIENTATION, /ON & $
+
+	endif & $
+				
+endif
+
+;Write out the png.
+if OUTPUT_FILE_TYPE eq 'PNG' then begin & $
+
+	PNG_FILE_NAME=BASENAME + '.png' & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', PNG_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+
+	if COLOR_BAR eq 'YES' then begin & $
+
+		out, PNG_FILE_NAME, /DISPLAY, ftype=PNG, /CBAR & $
+
+	endif else begin & $
+
+		out, PNG_FILE_NAME, /DISPLAY, ftype=PNG & $
+
+	endelse & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', PNG_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+endif & $
+
+;Write out the kmz file. & $
+if OUTPUT_FILE_TYPE eq 'KMZ' then begin & $
+			
+	KMZ_PNG_FILE_NAME=BASENAME + '_kmz.png' & $
+	KMZ_KML_FILE_NAME=BASENAME + '_kmz.kml' & $
+	KMZ_FILE_NAME=BASENAME + '.kmz' & $
+					
+	;First write out the kmz png file. & $
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', KMZ_PNG_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+
+	out, KMZ_PNG_FILE_NAME, /DISPLAY, ftype=PNG & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', KMZ_PNG_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+	;Then write out the kmz kml file. & $
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', KMZ_KML_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+					
+	openw, LUN, KMZ_KML_FILE_NAME, /get_lun & $
+	printf, LUN, '<?xml version="1.0" encoding="UTF-8"?>' & $
+	printf, LUN, '<kml xmlns="http://www.opengis.net/kml/2.2">' & $
+	printf, LUN, '	<GroundOverlay>' & $
+	printf, LUN, '		<Icon>' & $
+	printf, LUN, '			<href>' + KMZ_PNG_FILE_NAME + '</href>' & $
+	printf, LUN, '		</Icon>' & $
+	printf, LUN, '		<LatLonBox>' & $
+	printf, LUN, '			<north>' + NORTH + '</north>' & $
+	printf, LUN, '			<south>' + SOUTH + '</south>' & $
+	printf, LUN, '			<east>' + EAST + '</east>' & $
+	printf, LUN, '			<west>' + WEST + '</west>' & $
+	printf, LUN, '		</LatLonBox>' & $
+	printf, LUN, '	</GroundOverlay>' & $
+	printf, LUN, '</kml>' & $
+	free_lun, LUN & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', KMZ_KML_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+					
+	;Zip the png and kml files together to construct the kmz file.
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', KMZ_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+
+	KMZ_COMMAND='zip' + ' ' + KMZ_FILE_NAME + ' ' + KMZ_PNG_FILE_NAME + ' ' + KMZ_KML_FILE_NAME & $
+	spawn, KMZ_COMMAND & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', KMZ_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Removing ', KMZ_PNG_FILE_NAME, ' and ', KMZ_KML_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+					
+	;Finally remove the kmz png and text files. & $
+	REMOVE_PNG_KML_COMMAND='rm' + ' ' + KMZ_PNG_FILE_NAME + ' ' + KMZ_KML_FILE_NAME & $
+	spawn, REMOVE_PNG_KML_COMMAND & $
+					
+endif & $
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Clear up the SesDAS band memory and display memory for re-use. Loaded band 
+;numbers will start from 1 again. Equivalent to exiting.
+
+print, ''
+print, ''
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+print, 'Clearing up SeaDAS band memory and display memory ...'
+clear_up
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

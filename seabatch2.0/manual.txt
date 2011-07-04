@@ -1,0 +1,483 @@
+###########################################################################
+###########################################################################
+ABOUT
+
+If you work with ocean color data you likely need a way to batch process 
+multiple files. SeaBatch can help. Utilizing SeaDAS, the comprehensive 
+image analysis package developed by NASA's Ocean Biology Processing Group 
+(OBPG), SeaBatch is a group of Unix shell scripts that batch process ocean 
+color data derived from the MODIS (Aqua and Terra) and SeaWiFS sensors. 
+With SeaBatch you can:
+
+- Process MODIS Level-0 files (utilize high-resolution bands)
+- Process Level-1 files to Level-2
+- Spatially bin Level-2 files (.5, 1, 2, 4, 9, and 36 km)
+- Temporally bin Level-2 files (day, 7day, 8day, and month)
+- Output Level-3 files as ascii, flat, hdf, png, etc.
+
+SeaBatch is a powerful tool that will greatly assist you with your 
+research. It is free, as are SeaDAS and Unix. If using runtime SeaDAS an 
+IDL license is not required.
+
+SeaBatch is actively being developed by Mike Brown of Cornell University 
+and Jon Grant of Dalhousie University. If you download it please email Mike 
+at mike@seabatch.com so that you will be included on updates. If you find 
+SeaBatch useful in your research please acknowledge us. Thank you! 
+
+Finally, we strongly encourage feedback! Please visit http://seabatch.com 
+for more information. SeaBatch and this website will continue to develop. 
+Please direct any questions, suggestions, etc. concerning either to Mike at 
+mike@seabatch.com.
+
+1/20/2009
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+REQUIREMENTS
+
+- SeaDAS 5.3 (runtime or full IDL license)
+- /bin/bash
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+INSTALLATION
+
+- Make sure /bin/bash is installed on your system.
+
+- Install SeaDAS 5.3. Make sure it is working by typing in a terminal 
+"seadas" (or "seadas -em" if using runtime SeaDAS).
+
+- Create the directory $SEADAS/seabatch1.1 by typing in a terminal
+"mkdir $SEADAS/seabatch1.1". Place the following files in that directory:
+
+	- master_script.sh
+	- initial_check.sh
+	- level0tolevel1.sh
+	- level1tolevel2.sh
+	- level2tolevel3.sh
+	- level3tolevel4_batchfile
+	- cleanup.sh
+
+- Make sure the files listed above are executable. First change directories 
+to $SEADAS/seabatch1.1 by typing in a terminal "cd $SEADAS/seabatch1.1". 
+Type "ls" and make sure all the files are listed. Then type "chmod a+x *".
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+GETTING STARTED
+
+- IMPORTANT: These scripts are intended to be as user-friendly as possible,
+especially for those not familiar with Unix. However, PLEASE read these 
+general instructions AND the following detailed sections that correspond to 
+the type of processing you want to perform! Doing so will prevent errors 
+and confusion that otherwise will surely occurr.
+
+- Obtain the files you wish to process (MODIS Level-0, MODIS or SeaWiFS 
+Level-1A or Level-2) from the OBPG (or other source) and place them in a 
+directory. If using the script for the first time it is suggested that you 
+initially work with only a few files. Files not obtained from the OBPG must 
+have filenames that match the following patterns:
+
+	- MODIS Level-0: [AT]*.L0_LAC or MOD00.[AP]*.PDS
+	- MODIS or SeaWiFS Level-1A: [AST]*.L1A_[GL]AC* or S*.L1A_MLAC*
+	- MODIS or SeaWiFS Level-2: [AST]*.L2_[GL]AC* or S*.L2_MLAC*
+	
+- Unzip the files. First change directories to the directory where your
+files are located by typing in a terminal "cd your_directory". Type "ls" 
+and make sure all the files are listed. Then type "bunzip2 *". The files 
+must be unzipped before they can be processed! 
+
+- Run the scripts:
+
+	- If not already there, change directories to the directory where 
+	your files are located by typing in a terminal "cd your_directory".
+	You must run the scripts from the directory where your files are
+	located! Type "ls" and make sure all the files are listed. All the 
+	files of a specific processing run must be unzipped, of the same 
+	sensor (Aqua, Terra, or SeaWiFS), and of the same year. 
+	
+	- Open the file master_script.sh with your favorite text editor.
+	This is the only file (with a few exceptions) that you will ever
+	need to open or modify. You only need to focus on the top half,
+	which is where you specify your processing parameters. Some 
+	parameters must always be specified, while others only need to be
+	depending on the type of processing. PLEASE view the appropriate
+	sections below, which indicate which parameters must be changed 
+	given the type of processing you wish to perform! Save and close
+	master_script.sh when you are done.
+	
+	- Make sure that you are in the directory where your files are
+	located by typing in the terminal "pwd". Then type 
+	"$SEADAS/seabatch1.1/master_script.sh". Processing has started!
+	
+	- Monitor the output to the terminal, which will tell you when your
+	processing has finished, or if it has stopped due to an error.
+	Although this output may seem extremely complicated at first, it
+	really isn't. When initially using these scripts, or performing a
+	new type of processing, it is highly suggested that you first 
+	process only a few files and read the output to the terminal. This 
+	is the only way you can be absolutely sure the scripts are doing 
+	what you want.	
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+ALL PROCESSING
+ 
+- Specify the following parameters for all processing:
+
+	- OUT_DIR (default or an existing directory), the directory in 
+	which the processed files will be placed (the input files are not 
+	moved). If OUT_DIR is set to default, then the processed files will 
+	be placed in the directory from which master_script.sh is run (the 
+	directory where the input files are located). Within OUT_DIR 
+	separate sub-directories for each level of processed files will NOT 
+	be constructed. 
+	
+	If OUT_DIR is NOT set to default then it must be set to an existing 
+	directory. The final script called will be cleanup.sh, which will
+	create separate sub-directories within OUT_DIR for each level of 
+	processed files. For example if processing from Level-0 to Level-3, 
+	the following sub-directories will be constructed:
+
+		OUT_DIR/L1
+		OUT_DIR/L2
+		OUT_DIR/L3/TMPRL_AVG
+		
+	where TMPRL_AVG indicates a user specified temporal average. If
+	processing to Level-4 then the following sub-directories will be 
+	constructed:
+
+		OUT_DIR/L3/TMPRL_AVG/OUT_PRDCT/OUT_FTYPE
+		
+	where OUT_PRDCT and OUT_FTYPE indicate a user specified output 
+	product and file type, respectively.
+	
+	Ex. Set OUT_DIR to default:
+	OUT_DIR='default' (Note the '')
+	
+	Ex. Set OUT_DIR to an existing directory:
+	OUT_DIR='/Users/msb65/data' (Note the '' and the lack of a trailing 
+	forward slash)
+	
+	- START_LEVEL (0, 1, or 2) and END_LEVEL (1, 2, 3, or 4), the 
+	levels of the input and furthest processed files, respectively. 
+	
+	Ex. Set START_LEVEL to 0 and END_LEVEL to 4
+	START_LEVEL=0
+	END_LEVEL=4
+	
+	- WEST and EAST (-180.0 to 180.0), NORTH and SOUTH (90.0 to 
+	-90.0), the geographic bounds of the region of interest.
+	
+	Ex. Set WEST, EAST, NORTH, and SOUTH to 4.1, 7.6, 60.8 and 58.2,
+	respectively:
+	WEST=4.1
+	EAST=7.6
+	NORTH=60.8
+	SOUTH=58.2
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+MODIS LEVEL-0 to LEVEL-1 PROCESSING (START_LEVEL EQ 0 and END_LEVEL GE 1)
+
+- This processing stage is intended for those utilizing the high-resolution
+250 and 500 meter MODIS bands. The MODIS Level-1A and and Level-1B files 
+distributed by the OBPG are ocean-band-subsetted, ie. the high resolution 
+bands have been removed. Those who would like to utilize these bands should
+obtain Level-0 files from the OBPG, which have the full band suite. 
+For this processing stage the script level0tolevel1.sh is called, which 
+processes Level-0 files to Level-1A. The Level-1A files are then sub-scened 
+to the geographical bounds specified by EAST, WEST, NORTH and SOUTH.
+
+- Acceptable input files are MODIS Level-0 files with filenames matching 
+the following patterns: [AT]*.L0_LAC or MOD00.[AP]*.PDS
+
+- Output files will be MODIS Level-1A files with filenames matching the 
+following pattern: [AT]*.L1A_LAC_sub
+
+- No other parameters besides those used for all processing (OUT_DIR, 
+START_LEVEL, END_LEVEL, EAST, WEST, NORTH, SOUTH) need to be changed for 
+MODIS Level-0 to Level-1 processing.
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+LEVEL-1 TO LEVEL-2 PROCESSING (START_LEVEL LE 1 and END_LEVEL GE 2)
+
+- For this processing stage the script level1tolevel2.sh is called, which
+processes MODIS and SeaWiFS Level-1A files to Level-2. This process differs 
+slightly between the two sensors. A SeaWiFS Level-1A file is directly 
+processed to Level-2. A MODIS Level-1A file must first be used to construct 
+a GEO file, which together with the Level-1A file is used to construct a 
+Level-1B file. The Level-1B and GEO files are then used to construct a 
+Level-2 file.
+
+- Acceptable input files are MODIS or SeaWiFS Level-1A files with filenames 
+matching the following patterns: [AST]*.L1A_[GL]AC* or S*.L1A_MLAC*
+
+- Output files will be MODIS or SeaWiFS Level-2 files with filenames 
+matching the following patterns: [AST]*.L2_[GL]AC or S*.L2_MLAC
+
+- In addition to specifying the parameters for all processing (OUT_DIR, 
+START_LEVEL, END_LEVEL, EAST, WEST, NORTH, SOUTH), specify the following 
+for Level-1 to Level-2 processing:
+
+	- L2GEN_PRDCT_ARRAY (as of November 2008 see http://oceancolor.gsfc.
+	nasa.gov/DOCS/MSL12/MSl12_prod.html), an array containing the 
+	products to be constructed. If just default is specified then the 
+	default products for that sensor will be constructed. See the 
+	appropriate sensor's msl12_defaults.par file for a list. It should 
+	be noted that for MODIS processing there are four 
+	msl12_defaults.par files: modisa and modist (if utilizing the 
+	standard ocean band suite), and hmodisa and hmodist (if utilizing 
+	high-resolution bands). Within the two groups the default Aqua and 
+	Terra products are the same, but the default MODIS standard 
+	products differ from the default MODIS high-resolution products.
+	
+	It is also possible to specify default and any combination of 
+	non-default products. Finally, it is possible to specify any 
+	combination of products. When specifying individual products make 
+	sure that they are valid for the sensor of the input files, and 
+	spelled correctly.
+	
+	Ex. Specify the default products for the sensor of the input files:
+	L2GEN_PRDCT_ARRAY=(default) (Note the parentheses)
+	
+	Ex. Assuming MODIS input files that contain high-resolution bands,
+	specify the default products and chl_oc2, a non-default MODIS 
+	high_resolution band product:
+	L2GEN_PRDCT_ARRAY=(default chl_oc2) (Note the parentheses)
+	
+	Ex. Assuming SeaWiFS input files, specify chl_oc4 and nLw_510, two 
+	SeaWiFS products:
+	L2GEN_PRDCT_ARRAY=(chl_oc4 nLw_510) (Note the parentheses)
+	
+	- MODIS_L2GEN_RES (-1, 250, 500, or 1000), the MODIS processing 
+	resolution (for MODIS processing only). If utilizing the standard 
+	ocean band suite use -1. If utilizing high-resolution bands use 
+	either 250, 500, or 1000.  It should be noted that although it is 
+	possible to process at 250 m, the smallest spatial bin size during 
+	Level-2 to Level-3 processing is 500 m. It is necessary to 
+	spatially bin your data prior to temporally binning it. Therefore, 
+	if you are utilizing high-resolution bands and want to create 
+	temporal averages, then you should set MODIS_L2GEN_RES to 500. 
+	
+	Ex. Specify a 500 m processing resolution:
+	MODIS_L2GEN_RES=500
+	
+	- L2GEN_PARFILE (l2gen_default_parfile or an existing file), the
+	l2gen parameter file specified in the script level1tolevel2.sh. The
+	SeaDAS script l2gen is called to process SeaWiFS Level-1A or MODIS 
+	Level-1B and GEO files to Level-2. It is a complex script with many 
+	parameters that can be customized. Therefore l2gen is able to 
+	accept parameter files, with the idea being that different ones can 
+	be specified for different processing applications. 
+	
+	The default setting of level1tolevel2.sh sets L2GEN_PARFILE to 
+	l2gen_default_parfile, which is constructed on the fly during 
+	processing. It indicates to use the default settings of l2gen, but 
+	contains L2GEN_PRDCT_ARRAY and MODIS_L2GEN_RES, which are specified
+	by the user in master_script.sh. After Level-1 to Level-2 
+	processing ends, l2gen_default_parfile is removed. To utilize a 
+	customized parameter file, modify level1tolevel2.sh so that 
+	L2GEN_PARFILE is set to the absolute pathname of the file.
+	
+	Ex. Set L2GEN_PARFILE to l2gen_default_parfile:
+	L2GEN_PARFILE='l2gen_default_parfile' (Note the '')
+	
+	Ex. Set L2GEN_PARFILE to a customized parameter file: 
+	L2GEN_PARFILE='/Users/msb65/l2gen_custom_parfile' (Note the '')
+###########################################################################
+###########################################################################
+	
+
+
+	
+###########################################################################
+###########################################################################
+LEVEL-2 TO LEVEL-3 PROCESSING (START_LEVEL LE 2 and END_LEVEL GE 3)
+
+- For this processing stage the script level2tolevel3.sh is called, which 
+spatially and temporally bins MODIS and SeaWiFS Level-2 files.
+
+- Acceptable input files are MODIS or SeaWiFS Level-2 files with filenames 
+matching the following patterns: [AST]*.L2_[GL]AC* or S*.L2_MLAC*
+
+- Output files will be MODIS or SeaWiFS Level-2 files with filenames 
+matching the following pattern: [AST]*_{L2BIN_RES}_{TMPRL_AVG}.L3
+
+- In addition to specifying the parameters for all processing (OUT_DIR, 
+START_LEVEL, END_LEVEL, EAST, WEST, NORTH, SOUTH), specify the following 
+for Level-2 to Level-3 processing:
+
+	- L2BIN_RES (H, 1, 2, 4, 9, or 36), the spatial bin
+	resolution. The option H indicates 0.5 km.
+	
+	Ex. Specify a 1 km spatial bin resolution:
+	L2BIN_RES=1
+	
+	- TMPRL_AVG_ARRAY (DAY, 7DAY, 8DAY, MO, or NS), the temporal 
+	binning periods. It is possible to specify any combination. It is 
+	not necessary to have files of all the year days of a particular 
+	bin. For example, specifying 8D with only files of year days 001, 
+	003, 018, and 023 is OK. The first two files fall within the 8-day 
+	temporal bin of year days 001-008, and the second two within 
+	017-024. Two 8-day files will be contructed. Finally, specify NS 
+	for non-standard temporal bins. This will temporally bin ALL of the 
+	Level-2 files in the current directory.
+	
+	Example: Specify daily, 8-day, and monthly averages:
+	TMPRL_AVG_ARRAY=(DAY 8DAY MO) (Note the parentheses)
+	
+	- L2BIN_PARFILE (l2bin_default_parfile or an existing file), the
+	l2bin parameter file specified in the script level2tolevel3.sh. The
+	SeaDAS script l2bin is called to spatially bin MODIS and SeaWiFS 
+	Level-2 files. Like l2gen it accepts parameter files. The default 
+	setting of level2tolevel3.sh sets L2BIN_PARFILE to 
+	l2bin_default_parfile, which is constructed on the fly during 
+	processing. It indicates to use the default settings of l2bin, but 
+	contains L2BIN_RES, which is specified by the user in 
+	master_script.sh. After Level-2 to Level-3 processing ends, 
+	l2bin_default_parfile is removed. To utilize a customized parameter 
+	file, modify level2tolevel3.sh so that L2BIN_PARFILE is set to the 
+	absolute pathname of the file.
+	
+	Ex. Set L2BIN_PARFILE to l2bin_default_parfile:
+	L2GEN_PARFILE='l2bin_default_parfile' (Note the '')
+	
+	Ex. Set L2BIN_PARFILE to a customized parameter file: 
+	L2GEN_PARFILE='/Users/msb65/l2bin_custom_parfile' (Note the '')
+	
+	- L3BIN_PARFILE (l3bin_default_parfile or an existing file), the
+	l3bin parameter file specified in the script level2tolevel3.sh. The
+	SeaDAS script l3bin is called to temporally bin spatially binned 
+	MODIS and SeaWiFS Level-2 files. Like l2gen and l2bin it accepts 
+	parameter files. See the entries on L2GEN_PARFILE and L2BIN_PARFILE
+	for more information.
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+LEVEL-3 TO LEVEL-4 PROCESSING (START_LEVEL LE 2 and END_LEVEL EQ 4)
+
+- For this processing stage the script level3tolevel4_batchfile is called,
+which reprojects bands of user specified products in MODIS or SeaWiFS 
+Level-3 files into a cylindrical equidistant projection. These reprojected 
+bands are then written out as flat files and/or pngs (the latter have a 
+coastline overlayed and a user specified color bar applied).
+
+Inividual bands within the MODIS or SeaWiFS Level-3 files are reprojected
+by calling the SeaDAS script mapimg. It requires as input the x and y
+dimensions of a box within which the band will be reprojected. These
+dimensions are determined with the following formulas:
+
+	XDIM=(LON_RANGE*111.0)/ACTUAL_L2BIN_RES
+	YDIM=(LAT_RANGE*111.0)/ACTUAL_L2BIN_RES
+	
+where LON_RANGE and LAT_RANGE are the longitude and latitude ranges of the
+area defined by EAST, WEST, NORTH, and SOUTH. It should be noted that the
+spatial bin sizes possible for L2BIN_RES (H, 1, 2, 4, 9, or 36 km) are 
+just labels, and ACTUAL_L2BIN_RES is a more accurate value (.580, 1.160, 
+2.319, 4.638, 9.277, and 37.106 km).
+
+- This version of the scripts does not allow the user start processing at
+Level-3 (later versions will). To process to Level-4 users must start at
+Level-2 or lower.
+
+- Output files will be flat or png files with filenames matching the 
+following pattern: [AST]*_{L2BIN_RES}_{TMPRL_AVG}_{OUT_PRDCT}.{OUT_FTYPE}
+
+- In addition to specifying the parameters for all processing (OUT_DIR, 
+START_LEVEL, END_LEVEL, EAST, WEST, NORTH, SOUTH), specify the following 
+for Level-3 to Level-4 processing:
+
+	- OUT_PRDCT_ARRAY (as of November 2008 see http://oceancolor.gsfc.
+	nasa.gov/DOCS/MSL12/MSl12_prod.html), the array containing the
+	products whose bands in the Level-3 files will be reprojected and
+	output. If START_LEVEL is set to 2, ensure that the Level-2 files 
+	contain the specified output products and that they are spelled 
+	correctly.
+	
+	Ex. Assuming MODIS input files, specify chl_oc2 and nLw_645, two
+	MODIS products:
+	OUT_PRDCT_ARRAY=(chl_oc2 nLw_645) (Note the parentheses)
+	
+	- OUT_FTYPE_ARRAY (asc, flat, hdf, or png), the array containing 
+	the file types that all of the reprojected bands of the output 
+	products in the Level-3 files will be output as. SeaDAS is able to 
+	output other file types, including geotiff, mapped, postscript, 
+	etc. These options will be added upon request and as the script 
+	evolves.
+	
+	Ex. Specify both flat and png:
+	OUT_FTYPE_ARRAY=(flat png) (Note the parentheses)
+	
+- If OUT_FTYPE_ARRAY contains png then specify the following color table
+parameters:
+	
+	- CT_SETTING (default or custom), the color table setting. If 
+	CT_SETTING is set to default, then one color table is applied to 
+	all of the output products. If CT_SETTING is set to custom, then
+	a separate color table is applied to each of the output prodcts.  
+	
+	Ex. Set CT_SETTING to default:
+	CT_SETTING='default' (Note the '') 
+	
+	Ex. Set CT_SETTING to custom:
+	CT_SETTING='custom' (Note the '')
+	
+	- CT_SUBDIR_ARRAY (C, I, or S) and CT_NUM_ARRAY, the arrays of 
+	color table sub-directories and numbers respectively, that are used
+	together to specify the color tables that will be applied to the 
+	output products. SeaDAS groups color tables into three seperate 
+	sub-directories within CT_DIR: custom, idl, and standard. A color 
+	table is specified by 1) Indicating its sub-directory (C, I, or S) 
+	in CT_SUBDIR_ARRAY and 2) Indicating its number (relative to 1) 
+	within that sub-directory in CT_NUM_ARRAY.
+	
+	If CT_SETTING is set to default then only one color table can be
+	specified, which will be applied to all of the output products. If 
+	CT_SETTING is set to custom then the number of color tables must 
+	equal the number of output products. The first color table 
+	specified will be applied to the first output product, the second
+	color table to the second ouput product, etc.
+	
+	Ex. Specify the color tables 02-standard_chl.lut, 
+	idl-14-rainbow.lut, and 02-anomaly2.lut:
+	CT_SUBDIR_ARRAY=(S I C)
+	CT_NUM_ARRAY=(2 14 2)
+###########################################################################
+###########################################################################

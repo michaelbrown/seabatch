@@ -1,0 +1,311 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TMPRL_AVG_ARRAY=['1D']
+SENSOR='A'
+YEAR='2002'
+XDIM='383'	
+YDIM='191'
+PRODUCT='nLw_645'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define F_YEAR, the result of converting YEAR from a string to a floating
+;point variable. If F_YEAR is not evenly divisible by four then it is a 
+;normal year (ie. not a leap year). Define YEAR_TYPE, the type of year 
+;(NORMAL or LEAP), and YD_AMNT, the number of year-days in YEAR (365 for 
+;normal years, 366 for leap years).
+
+F_YEAR=float(YEAR)
+
+if F_YEAR MOD 4 ne 0 then begin & $
+	YEAR_TYPE='NORMAL' & $
+	YD_AMNT=365 & $
+endif
+
+if F_YEAR MOD 4 eq 0 then begin & $
+	YEAR_TYPE='LEAP' & $
+	YD_AMNT=366 & $
+endif
+
+;help, F_YEAR, YEAR_TYPE, YD_AMNT
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define YD_ARRAY, the string array whose elements range from 001-366. The 
+;elements of YD_ARRAY will be referenced to select the proper files when 
+;creating the temporal averages.
+
+YD_ARRAY=strarr(366)
+;help, YD_ARRAY
+
+for A=0,365 do begin & $
+
+	S_A=strcompress(string(A + 1), /remove_all) & $
+	
+	if A lt 9 then begin & $
+		YD_ARRAY(A)='00' + S_A & $
+	endif & $
+	
+	if A ge 9 and A lt 99 then begin & $
+		YD_ARRAY(A)='0' + S_A & $
+	endif & $
+	
+	if A ge 99 then begin & $
+		YD_ARRAY(A)=S_A & $
+	endif & $
+
+endfor
+;print, YD_ARRAY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+loadct, 13 & $
+device, decompose=0 & $
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for B=0, n_elements(TMPRL_AVG_ARRAY) - 1 do begin & $
+
+	;Define TMPRL_AVG, the Bth element of TMPRL_AVG_ARRAY.
+	TMPRL_AVG=TMPRL_AVG_ARRAY(B) & $
+	;help, TMPRL_AVG & $
+	
+	;If TMPRL_AVG is not equal to 'MO' or 'NS' then define F_TMPRL_AVG,
+	;the result of converting TMPRL_AVG from a string to a floating 
+	;point variable.
+	if TMPRL_AVG ne 'MO' or TMPRL_AVG ne 'NS' then begin & $
+		
+		D_POS=strpos(TMPRL_AVG, 'D', /reverse_search) & $
+		;help, D_POS & $
+		
+		F_TMPRL_AVG=float(strmid(TMPRL_AVG, 0, D_POS)) & $
+		;help, F_TMPRL_AVG & $
+		
+	endif & $
+	
+	print, '' & $
+	print, '' & $
+	print, '***** Constructing ', TMPRL_AVG, ' Averages *****' & $
+	
+	;Define TMPRL_AVG_AMNT, the number of complete TMPRL_AVGs within
+	;YEAR.
+	case TMPRL_AVG of & $
+		'NS': TMPRL_AVG_AMNT=1 & $
+		'MO': TMPRL_AVG_AMNT=12 & $
+		else: TMPRL_AVG_AMNT=floor(YD_AMNT/TMPRL_AVG) & $
+	endcase & $
+	;help, TMPRL_AVG_AMNT & $
+	
+	;Define YD_COUNT, and initially set it to zero. YD_COUNT will
+	;range from 0 to 365, and is used to index YD_ARRAY.
+	YD_COUNT=0 & $
+	
+	for C=0, TMPRL_AVG_AMNT - 1 do begin & $
+	
+		;Define S_C, the result of converting C to a string.
+		S_C=strcompress(string(C), /remove_all) & $
+		;help, S_C & $
+	
+		print, '' & $
+		print, '' & $
+		print, '***** Constructing ', TMPRL_AVG, ' Average #', S_C, ' *****' & $
+		
+		if YEAR_TYPE eq 'NORMAL' then MONTH_YD_AMNT_ARRAY=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] & $
+		if YEAR_TYPE eq 'LEAP' then MONTH_YD_AMNT_ARRAY=[31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] & $
+		
+		case TMPRL_AVG of & $
+			'NS': TMPRL_AVG_YD_AMNT=1 & $
+			'MO': TMPRL_AVG_YD_AMNT=MONTH_YD_AMNT_ARRAY(C) & $
+			else: TMPRL_AVG_YD_AMNT=F_TMPRL_AVG & $
+		endcase & $
+		;help, TMPRL_AVG_YD_AMNT & $
+
+		;Define FILE_COUNT, and initially set it to 0.
+		FILE_COUNT=0 & $
+		
+		for D=0, TMPRL_AVG_YD_AMNT - 1 do begin & $
+		
+			;
+			YD=YD_ARRAY(YD_COUNT) & $
+			;help, YD & $
+			
+			; 
+			case TMPRL_AVG of & $
+				'NS': FNAME_STRUCTURE=SENSOR + YEAR + '*.flat' & $
+				else: FNAME_STRUCTURE=SENSOR + YEAR + YD + '*.flat' & $
+			endcase & $
+			;help, FNAME_STRUCTURE & $
+		
+			;Define L2_FILE_LIST, the list of all the Level-2 
+			;files in the current directory that correspond to 
+			;FNAME_STRUCTURE.
+			L2_FILE_LIST=file_search('./' + FNAME_STRUCTURE) & $
+			;help, L2_FILE_LIST & $
+			
+			print, '' & $
+			print, '' & $
+			print, 'Listing all ', FNAME_STRUCTURE, ' files...' & $
+			
+			if L2_FILE_LIST(0) eq '' then begin & $
+				print, 'No such files exist!' & $
+			endif else begin & $
+				
+				print, L2_FILE_LIST & $
+				
+				;Define AVG_FILE_LIST, the list of Level-2 
+				;files that will be temporally averaged. 
+				;If FILE_COUNT is equal to 0 then 
+				;AVG_FILE_LIST is set equal to L2_FILE_LIST. 
+				;Otherwise L2_FILE_LIST is appended to 
+				;AVG_FILE_LIST.
+				if FILE_COUNT eq 0 then AVG_FILE_LIST=L2_FILE_LIST & $
+				if FILE_COUNT ne 0 then AVG_FILE_LIST=[AVG_FILE_LIST,L2_FILE_LIST] & $
+				
+				;Increment FILE_COUNT by 1.
+				FILE_COUNT=FILE_COUNT + n_elements(L2_FILE_LIST) & $
+				;help, FILE_COUNT & $
+				
+			endelse & $
+			
+			;Define AVG_START_YDAY and AVG_END_YDAY, the start 
+			;and end year days of the temporal average.
+			case TMPRL_AVG of & $
+				'NS': begin & $
+					   FIRST_L2_FILE=AVG_FILE_LIST(0) & $
+					   LAST_L2_FILE=AVG_FILE_LIST(n_elements(AVG_FILE_LIST) - 1) & $
+					   
+					   AVG_START_YDAY=strmid(FIRST_L2_FILE, 5, 3) & $
+				           AVG_END_YDAY=strmid(LAST_L2_FILE, 5, 3) & $
+				      end & $
+				else: begin & $
+				           if D eq 0 then AVG_START_YDAY=YD & $
+				           if D eq (TMPRL_AVG_YD_AMNT - 1) then AVG_END_YDAY=YD & $
+				      end & $
+			endcase & $
+			;help, AVG_START_YDAY, AVG_END_YDAY & $
+			
+			;Increment YD_COUNT by 1.
+			YD_COUNT=YD_COUNT + 1 & $
+				
+		endfor & $
+		
+		if FILE_COUNT ne 0 then begin & $
+			
+			print, '' & $
+			print, '' & $
+			print, 'Files to be temporally averaged for ', TMPRL_AVG, ' Average #', S_C, ':' & $
+			print, AVG_FILE_LIST & $
+			print, '' & $
+			print, '' & $
+			
+			;Define F_XDIM and F_YDIM, the result of converting
+			;XDIM and YDIM from strings to floating point
+			;variables.
+			
+			F_XDIM=float(XDIM) & $
+			F_YDIM=float(YDIM) & $
+			;help, F_XDIM, F_YDIM & $
+			
+			COUNT_ARRAY=fltarr(XDIM,YDIM) & $
+			TOTAL_ARRAY=fltarr(XDIM,YDIM) & $
+			
+			for E=0, FILE_COUNT - 1 do begin & $
+			
+				;Define L2_FILE, the Eth element of 
+				;AVG_FILE_LIST
+				L2_FILE=AVG_FILE_LIST(E) & $
+				
+				print, '' & $
+				print, '' & $
+				print, L2_FILE & $
+				
+				L2_FILE_ARRAY=fltarr(F_XDIM,F_YDIM) & $
+				
+				openr, LUN, L2_FILE, /get_lun & $
+				readu, LUN, L2_FILE_ARRAY & $
+				free_lun, LUN & $
+				
+				case PRODUCT of & $
+					'nLw_645': BAD_LOC=where(L2_FILE_ARRAY le 0.0) & $
+					'chlor_a': BAD_LOC=where(L2_FILE_ARRAY eq -999.0 OR L2_FILE_ARRAY gt 30.0) & $
+					else: BAD_LOC=where(L2_FILE_ARRAY eq -999.0)& $
+				endcase & $
+				;help, BAD_LOC & $
+				
+				if BAD_LOC(0) ne -1 then L2_FILE_ARRAY(BAD_LOC)=!VALUES.F_NAN & $
+				
+				help, min(L2_FILE_ARRAY, /nan), max(L2_FILE_ARRAY, /nan) & $
+				
+				;window, 0, xsize=F_XDIM, ysize=F_YDIM & $
+				;tv, bytscl(L2_FILE_ARRAY, min=-1.0, max=3.0, /nan), /o & $
+				
+				GOOD_LOC=where(finite(L2_FILE_ARRAY) eq 1.0) & $
+				
+				if GOOD_LOC(0) ne -1 then begin & $
+					 COUNT_ARRAY(GOOD_LOC)=COUNT_ARRAY(GOOD_LOC) + 1.0 & $
+					 TOTAL_ARRAY(GOOD_LOC)=TOTAL_ARRAY(GOOD_LOC) + L2_FILE_ARRAY(GOOD_LOC) & $
+				endif & $
+					
+			endfor & $
+			
+			AVG_ARRAY=TOTAL_ARRAY/COUNT_ARRAY & $
+			help, min(AVG_ARRAY, /nan), max(AVG_ARRAY, /nan) & $
+			
+			window, 0, xsize=F_XDIM, ysize=F_YDIM & $
+			tv, bytscl(AVG_ARRAY, min=0, max=10.0), /o & $
+			wait, 5 & $
+			
+			if TMPRL_AVG eq '1D' then begin & $
+				ASCII_OUT_FNAME=SENSOR + YEAR + YD + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '.asc' & $
+				PNG_OUT_FNAME=SENSOR + YEAR + YD + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '.png' & $
+				FLAT_OUT_FNAME=SENSOR + YEAR + YD + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '_' + XDIM + 'x' + YDIM + '.flat' & $
+			endif else begin & $
+				ASCII_OUT_FNAME=SENSOR + YEAR + AVG_START_YDAY + YEAR + AVG_END_YDAY + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '.asc' & $
+				PNG_OUT_FNAME=SENSOR + YEAR + AVG_START_YDAY + YEAR + AVG_END_YDAY + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '.png' & $
+				FLAT_OUT_FNAME=SENSOR + YEAR + AVG_START_YDAY + YEAR + AVG_END_YDAY + '_250m_' + TMPRL_AVG + '_' + PRODUCT + '_' + XDIM + 'x' + YDIM + '.flat' & $
+			endelse & $
+			;help, ASCII_OUT_FNAME, FLAT_OUT_FNAME & $
+			
+			;Write out AVG_ARRAY as a floating point flat
+			;file to the harddrive.
+			openw,  LUN, FLAT_OUT_FNAME, /get_lun & $
+			writeu, LUN,  AVG_ARRAY & $
+			free_lun, LUN & $
+			print, 'Wrote out', FLAT_OUT_FNAME & $
+			
+			;Load the floating point flat file that was just 
+			;written to the harddrive.
+			;print, 'Loading...' & $
+			;load, FLAT_OUT_FNAME, ftype='FLAT', pixel=XDIM, line=YDIM, datatype=4, latlon=[70.0, -134.0, 69.0, -132.0] & $
+			
+			;print, 'Displaying...' & $
+			;display, band_no=1 & $
+			
+			;print, 'Applying colorbar...' & $
+			;loadpal, '$SEADAS/config/color_luts/standard/09-standard_nlw.lut' & $
+			
+			;print, 'Overlaying coastline...' & $
+			;coast & $
+			
+			;Write out AVG_ARRAY as an ascii file to the 
+			;harddrive.
+			;out_ascii, ASCII_OUT_FNAME, band_no=1, vars=[2,3,4] & $
+			;print, 'Wrote out', ASCII_OUT_FNAME & $
+			
+			;Write out AVG_ARRAY as png to the harddrive.
+			;out, PNG_OUT_FNAME, /DISPLAY, ftype=PNG & $
+			
+		endif & $
+	
+	endfor & $
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

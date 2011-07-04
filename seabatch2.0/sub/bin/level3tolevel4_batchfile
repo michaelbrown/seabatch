@@ -1,0 +1,406 @@
+;This script takes daily, 7-day, 8-day, monthly, and/or non-standard MODIS 
+;(Aqua and Terra) and SeaWiFS Level-3 files and reprojects them into a 
+;cyclindrical equidistant projection. The files are then written out as 
+;ascii, flat, hdf, png, etc.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define variables read in from batchfile_variables.txt.
+
+openr, lun, 'batchfile_variables.txt', /get_lun
+
+;Read in WEST, EAST, NORTH and SOUTH.
+readf, lun, WEST
+readf, lun, EAST
+readf, lun, NORTH
+readf, lun, SOUTH
+S_WEST=strcompress(string(WEST),/remove_all)
+S_EAST=strcompress(string(EAST),/remove_all)
+S_NORTH=strcompress(string(NORTH),/remove_all)
+S_SOUTH=strcompress(string(SOUTH),/remove_all)
+
+;Define LON_RANGE and LAT_RANGE to be the longitude and latitude ranges
+;of the region of interest.
+LON_RANGE=EAST - WEST
+LAT_RANGE=NORTH - SOUTH
+
+;Read in OUT_PRDCT_ARRAY.
+readf, lun, OUT_PRDCT_AMNT
+OUT_PRDCT_ARRAY=STRARR(OUT_PRDCT_AMNT)
+for b=0,OUT_PRDCT_AMNT - 1 do begin & $
+	OUT_PRDCT='' & $
+	readf, lun, OUT_PRDCT & $
+	OUT_PRDCT_ARRAY(b)=OUT_PRDCT & $
+endfor
+
+;Read in OUT_FTYPE_ARRAY.
+readf, lun, OUT_FTYPE_AMNT
+OUT_FTYPE_ARRAY=STRARR(OUT_FTYPE_AMNT)
+for c=0,OUT_FTYPE_AMNT - 1 do begin & $
+	OUT_FTYPE='' & $
+	readf, lun, OUT_FTYPE & $
+	OUT_FTYPE_ARRAY(c)=OUT_FTYPE & $
+endfor
+
+DISPLAY='NO'
+DISPLAY_OUT_FTYPE=where(OUT_FTYPE_ARRAY eq 'png' or OUT_FTYPE_ARRAY eq 'kmz')
+if DISPLAY_OUT_FTYPE(0) ne -1 then DISPLAY = 'YES'
+
+if DISPLAY eq 'NO' then begin & $
+free_lun, lun & $
+endif	
+
+;If DISPLAY is set to YES then define the color table variables.
+if DISPLAY eq 'YES' then begin & $
+	
+	;Read in CT_DIR. & $
+	CT_DIR='' & $
+	readf, lun, CT_DIR & $
+
+	;Read in CT_SETTING. & $
+	CT_SETTING='' & $
+	readf, lun, CT_SETTING & $
+
+	;Read in CT_SUBDIR_ARRAY. & $
+	readf, lun, CT_SUBDIR_AMNT & $
+	CT_SUBDIR_ARRAY=STRARR(CT_SUBDIR_AMNT) & $
+	for d=0,CT_SUBDIR_AMNT - 1 do begin & $
+		CT_SUBDIR='' & $
+		readf, lun, CT_SUBDIR & $
+		CT_SUBDIR_ARRAY(d)=CT_SUBDIR & $
+	endfor & $
+
+	;Read in CT_NUM_ARRAY. & $
+	readf, lun, CT_NUM_AMNT & $
+	CT_NUM_ARRAY=INTARR(CT_NUM_AMNT) & $
+	for e=0,CT_NUM_AMNT - 1 do begin & $
+		readf, lun, CT_NUM & $
+		CT_NUM_ARRAY(e)=CT_NUM & $
+	endfor & $
+
+	free_lun, lun & $
+
+	;Using the elements of CT_SUBDIR_ARRAY and CT_NUM_ARRAY define the color & $
+	;tables to be used. & $
+	CT_ARRAY=STRARR(1,CT_SUBDIR_AMNT) & $
+	for f=0,CT_SUBDIR_AMNT - 1 do begin & $
+		if CT_SUBDIR_ARRAY(f) eq 'C' then CT_SUBDIR=findfile(CT_DIR + '/custom/*') & $
+		if CT_SUBDIR_ARRAY(f) eq 'I' then CT_SUBDIR=findfile(CT_DIR + '/idl/*') & $
+		if CT_SUBDIR_ARRAY(f) eq 'S' then CT_SUBDIR=findfile(CT_DIR + '/standard/*') & $
+	
+		CT=CT_SUBDIR(CT_NUM_ARRAY(f) - 1) & $
+		CT_ARRAY(0,f)=CT & $
+	endfor & $
+
+endif
+
+;Display variables.
+print, ''
+print, ''
+print, 'WEST:', WEST, 'E' 
+print, 'EAST:', EAST, 'E' 
+print, 'NORTH:', NORTH, 'N' 
+print, 'SOUTH:', SOUTH, 'N'
+print, 'LON RANGE:', LON_RANGE 
+print, 'LAT RANGE:', LAT_RANGE
+print, 'OUT_PRDCT_ARRAY:', OUT_PRDCT_ARRAY
+print, 'OUT_FTYPE_ARRAY:', OUT_FTYPE_ARRAY
+print, 'DISPLAY: ', DISPLAY
+
+;If DISPLAY is set to YES then display the color table variables.
+if DISPLAY eq 'YES' then begin & $
+	print, 'CT_DIR: ', CT_DIR & $
+	print, 'CT_SETTING: ', CT_SETTING & $
+	print, 'CT_SUBDIR_ARRAY:', CT_SUBDIR_ARRAY & $
+	print, 'CT_NUM_ARRAY:', CT_NUM_ARRAY & $
+	print, 'CT_ARRAY:' & $
+	print, CT_ARRAY & $
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define L3_FILE_LIST, an array containing all of the Level-3 files (those
+;files that match the pattern "[AST]*_*_*.L3") in the current directory.
+;Define L3_FILE_AMNT, the number of files contained in L3_FILE_LIST.
+
+L3_FILE_LIST=findfile('[AST]*_*_*.L3')
+print, ''
+print, ''
+print, '***** LEVEL 3 FILE LIST: *****'
+print, ''
+print, ''
+print, L3_FILE_LIST
+
+L3_FILE_AMNT=N_ELEMENTS(L3_FILE_LIST)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+for g=0, L3_FILE_AMNT - 1 do begin & $
+
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define CURRENT_L3_FILE, the "gth" element of L3_FILE_LIST. 
+	
+	CURRENT_L3_FILE=L3_FILE_LIST(g) & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define BASE, L2BIN, and TMPRL_AVG, the basename and spatial and 
+	;temporal resolutions of CURRENT_L3_FILE. 
+	
+	DASH_1_POS=strpos(CURRENT_L3_FILE,'_') & $
+	DASH_2_POS=strpos(CURRENT_L3_FILE,'_', /reverse_search) & $
+	PERIOD_POS=strpos(CURRENT_L3_FILE,'.') & $
+	
+	L2BIN_RES_POS=DASH_1_POS + 1 & $
+	L2BIN_RES_LENGTH=DASH_2_POS - DASH_1_POS - 1 & $
+	TMPRL_AVG_POS=DASH_2_POS + 1 & $
+	TMPRL_AVG_LENGTH=PERIOD_POS - DASH_2_POS - 1 & $
+	
+	BASE=strmid(CURRENT_L3_FILE,0,DASH_1_POS) & $
+	
+	S_L2BIN_RES=strmid(CURRENT_L3_FILE,L2BIN_RES_POS,L2BIN_RES_LENGTH) & $
+	if S_L2BIN_RES eq 'H' then L2BIN_RES=.5 & $
+	if S_L2BIN_RES ne 'H' then L2BIN_RES=float(S_L2BIN_RES) & $
+	
+	TMPRL_AVG=strmid(CURRENT_L3_FILE,TMPRL_AVG_POS,TMPRL_AVG_LENGTH) & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;The spatial bin sizes of H, 1, 2, 4, 9, and 36 km^2 used by the SeaDAS
+	;script "l2bin" are just convenient labels. They correspond to bin sizes of
+	;approximately .580, 1.160, 2.319, 4.638, 9.277, and 37.106 km^2 
+	;respectively, and therefore must be converted.
+	
+	if L2BIN_RES eq .5 then ACTUAL_L2BIN_RES=.580 & $
+	if L2BIN_RES eq 1.0 then ACTUAL_L2BIN_RES=1.160 & $
+	if L2BIN_RES eq 2.0 then ACTUAL_L2BIN_RES=2.319 & $
+	if L2BIN_RES eq 4.0 then ACTUAL_L2BIN_RES=4.638 & $
+	if L2BIN_RES eq 9.0 then ACTUAL_L2BIN_RES=9.277 & $
+	if L2BIN_RES eq 36.0 then ACTUAL_L2BIN_RES=37.106 & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	print, '' & $
+	print, '' & $
+	print, '***** CURRENT_L3_FILE:', CURRENT_L3_FILE, ' *****' & $
+	print, '' & $
+	print, '' & $
+	print, 'BASE: ', BASE & $
+	print, 'L2BIN_RES: ', S_L2BIN_RES & $
+	print, 'ACTUAL_L2BIN_RES:', ACTUAL_L2BIN_RES & $
+	print, 'TMPRL_AVG: ', TMPRL_AVG & $
+	
+	for h=0,OUT_PRDCT_AMNT - 1 do begin & $
+		
+		CURRENT_OUT_PRDCT=OUT_PRDCT_ARRAY(h) & $
+		
+		for i=0, OUT_FTYPE_AMNT - 1 do begin & $
+
+			CURRENT_OUT_FTYPE=OUT_FTYPE_ARRAY(i) & $
+			
+			
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;Define DEFAULT_XDIM and DEFAULT_YDIM, the dimensions of the output files.
+				
+				DIM_TYPE='DEFAULT' & $
+	
+				DEFAULT_XDIM=fix(round((LON_RANGE*111.0)/ACTUAL_L2BIN_RES)) & $
+				DEFAULT_YDIM=fix(round((LAT_RANGE*111.0)/ACTUAL_L2BIN_RES)) & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				if CURRENT_OUT_FTYPE eq 'kmz' or CURRENT_OUT_FTYPE eq 'png' then begin & $
+					DIM_TYPE='DISPLAY' & $
+					
+					DISPLAY_DIM=500 & $
+	
+					DEFAULT_XYDIM_RATIO=float(DEFAULT_XDIM)/float(DEFAULT_YDIM) & $
+					
+					if DEFAULT_XYDIM_RATIO ge 1.0 then begin & $
+						DISPLAY_XDIM=DISPLAY_DIM & $
+						DISPLAY_YDIM=fix(round(float(DISPLAY_DIM)/float(DEFAULT_XYDIM_RATIO))) & $
+					endif & $
+	
+					if DEFAULT_XYDIM_RATIO lt 1.0 then begin & $
+						DISPLAY_XDIM=fix(round(float(DISPLAY_DIM)*float(DEFAULT_XYDIM_RATIO))) & $
+						DISPLAY_YDIM=DISPLAY_DIM & $
+					endif & $
+				endif & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				if DIM_TYPE eq 'DEFAULT' then begin & $
+					XDIM=DEFAULT_XDIM & $
+					YDIM=DEFAULT_YDIM & $
+				endif & $
+				
+				if DIM_TYPE eq 'DISPLAY' then begin & $
+					XDIM=DISPLAY_XDIM & $
+					YDIM=DISPLAY_YDIM & $
+				endif & $
+				
+				S_XDIM=strcompress(string(XDIM),/remove_all) & $
+				S_YDIM=strcompress(string(YDIM),/remove_all) & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				print, '' & $
+				print, '' & $
+				print, 'CURRENT_OUT_PRDCT: ', CURRENT_OUT_PRDCT & $
+				print, 'CURRENT_OUT_FTYPE: ', CURRENT_OUT_FTYPE & $
+				print, 'DIM_TYPE: ', DIM_TYPE & $
+				print, 'XDIM: ', XDIM & $
+				print, 'YDIM: ', YDIM & $
+				print, '' & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;Load the band of CURRENT_OUT_PRDCT. & $
+				
+				print, 'LOADING AND REPROJECTING ', CURRENT_OUT_PRDCT, ' BAND IN ', CURRENT_L3_FILE & $
+				load, CURRENT_L3_FILE, prod_name=CURRENT_OUT_PRDCT, cat_no=1, missing=0.0, xsize=XDIM, ysize=YDIM, limit=[SOUTH,WEST,NORTH,EAST], /CYLINDRICAL & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;If DISPLAY is set to YES then display the & $
+				;reprojected band in your computer's memory, & $
+				;overlay a coastline, and apply a color table. & $
+				
+				if DIM_TYPE eq 'DISPLAY' then begin & $
+					print, 'DISPLAYING REPROJECTED ', CURRENT_OUT_PRDCT, ' BAND IN ', CURRENT_L3_FILE & $
+					display, band_no=1 & $
+				
+					if CT_SETTING eq 'default' then CT=CT_ARRAY(0) & $
+					if CT_SETTING eq 'custom' then CT=CT_ARRAY(h) & $
+					
+					print, 'APPLYING COLOR TABLE: ', CT & $
+					loadpal, CT & $
+				
+					print, 'OVERLAYING COASTLINE' & $
+					coast & $
+				
+				endif & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;Write out the ascii file. & $
+				if CURRENT_OUT_FTYPE eq 'asc' then begin & $
+					ASCII_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'.asc' & $
+					out_ascii, ASCII_OUT_FNAME, band_no=1, vars=[2,3,4] & $
+				endif & $
+				
+				;Write out the flat file. & $
+				if CURRENT_OUT_FTYPE eq 'flat' then begin & $
+					FLAT_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'_'+S_XDIM+'x'+S_YDIM+'.flat' & $
+					out, FLAT_OUT_FNAME, band=1, /DATA, ftype=FLAT & $
+				endif & $
+				
+				;Write out the hdf file. & $
+				if CURRENT_OUT_FTYPE eq 'hdf' then begin & $
+					HDF_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'.hdf' & $
+					out, HDF_OUT_FNAME, band=1, /DATA, ftype=HDF & $
+					out, HDF_OUT_FNAME, band=1, /NAV, ftype=HDF, append=1 & $
+				endif & $
+				
+				;Write out the png. & $
+				if CURRENT_OUT_FTYPE eq 'png' then begin & $
+					PNG_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'.png' & $
+					out, PNG_OUT_FNAME, /DISPLAY, ftype=PNG & $
+				endif & $
+				
+				;Write out the kmz file. & $
+				if CURRENT_OUT_FTYPE eq 'kmz' then begin & $
+					KMZ_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT + '.kmz' & $
+					KMZ_PNG_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'_KMZ.png' & $
+					KMZ_TXT_OUT_FNAME=BASE+'_'+S_L2BIN_RES+'_'+TMPRL_AVG+'_'+CURRENT_OUT_PRDCT+'_KMZ.kml' & $
+					;print, KMZ_OUT_FNAME, KMZ_PNG_OUT_FNAME, KMZ_TXT_OUT_FNAME & $
+					
+					;First write out the kmz png file. & $
+					out, KMZ_PNG_OUT_FNAME, /DISPLAY, ftype=PNG & $
+					
+					;Then write out the kmz text file. & $
+					openw, LUN, KMZ_TXT_OUT_FNAME, /get_lun & $
+					printf, LUN, '<?xml version="1.0" encoding="UTF-8"?>' & $
+					printf, LUN, '<kml xmlns="http://www.opengis.net/kml/2.2">' & $
+					printf, LUN, '	<GroundOverlay>' & $
+					printf, LUN, '		<Icon>' & $
+        				printf, LUN, '			<href>' + KMZ_PNG_OUT_FNAME + '</href>' & $
+     					printf, LUN, '		</Icon>' & $
+					printf, LUN, '		<LatLonBox>' & $
+        				printf, LUN, '			<north>' + S_NORTH + '</north>' & $
+        				printf, LUN, '			<south>' + S_SOUTH + '</south>' & $
+					printf, LUN, '			<east>' + S_EAST + '</east>' & $
+					printf, LUN, '			<west>' + S_WEST + '</west>' & $
+      					printf, LUN, '		</LatLonBox>' & $
+					printf, LUN, '	</GroundOverlay>' & $
+					printf, LUN, '</kml>' & $
+					free_lun, LUN & $
+					print, 'Wrote: ', KMZ_TXT_OUT_FNAME & $
+					
+					;Zip the kmz png and text files into a kmz file. & $
+					ZIP_CMND='zip' + ' ' + KMZ_OUT_FNAME + ' ' + KMZ_PNG_OUT_FNAME + ' ' + KMZ_TXT_OUT_FNAME & $
+					print, ZIP_CMND & $
+					spawn, ZIP_CMND & $
+					
+					;Finally remove the kmz png and text files. & $
+					RM_CMND='rm' + ' ' + KMZ_PNG_OUT_FNAME + ' ' + KMZ_TXT_OUT_FNAME & $
+					print, RM_CMND & $
+					spawn, RM_CMND & $
+					
+				endif & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;Clear up band memory and display memory for re-use. Loaded 
+				;band numbers will start from 1 again. Equivalent to exiting 
+				;the display program interactively. 
+				
+				clear_up & $
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+		endfor & $
+		
+	endfor & $
+	
+endfor
+
+
+print, ''
+print, ''
+print, '***** LEVEL-3 TO LEVEL-4 PROCESSING COMPLETE *****'

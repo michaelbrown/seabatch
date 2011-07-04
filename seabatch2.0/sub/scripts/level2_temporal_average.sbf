@@ -1,0 +1,568 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_XDIM='766'
+FLAT_FILE_YDIM='383'
+
+TEMPORAL_AVERAGE_YEAR='2006'
+
+TEMPORAL_AVERAGE_TYPES=['1D']
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='level2_temporal_avg.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, and 
+;FLOAT_TEMPORAL_AVERAGE_YEAR, the result of converting FLAT_FILE_XDIM, 
+;FLAT_FILE_YDIM, and TEMPORAL_AVERAGE_YEAR to floating point variables, 
+;respectively.
+
+FLOAT_FLAT_FILE_XDIM=float(FLAT_FILE_XDIM)
+FLOAT_FLAT_FILE_YDIM=float(FLAT_FILE_YDIM)
+
+FLOAT_TEMPORAL_AVERAGE_YEAR=float(TEMPORAL_AVERAGE_YEAR)
+
+;help, FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, FLOAT_TEMPORAL_AVERAGE_YEAR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;If FLOAT_TEMPORAL_AVERAGE_YEAR is not evenly divisible by four then it is 
+;a normal year (ie. not a leap year). Define YEAR_TYPE, 
+;the type of year (NORMAL or LEAP). Define YEAR_YEARDAY_AMOUNT, the number 
+;of year days in TEMPORAL_AVERAGE_YEAR (365 for normal years and 366 for leap years).
+
+if FLOAT_TEMPORAL_AVERAGE_YEAR MOD 4 ne 0 then begin & $
+	YEAR_TYPE='NORMAL' & $
+	YEAR_YEARDAY_AMOUNT=365.0 & $
+endif
+
+if FLOAT_TEMPORAL_AVERAGE_YEAR MOD 4 eq 0 then begin & $
+	YEAR_TYPE='LEAP' & $
+	YEAR_YEARDAY_AMOUNT=366.0 & $
+endif
+
+;help, YEAR_TYPE, YEAR_YEARDAY_AMOUNT
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define YEARDAY_ARRAY, the string array whose elements range from 001-366. 
+;The elements of YEARDAY_ARRAY will be referenced to select the proper 
+;Level-2 flat files when creating the temporal averages.
+
+YEARDAY_ARRAY=strarr(366)
+;help, YEARDAY_ARRAY
+
+for A=0,365 do begin & $
+
+	STRING_A=strcompress(string(A + 1), /remove_all) & $
+	
+	if A lt 9 then begin & $
+		YEARDAY_ARRAY(A)='00' + STRING_A & $
+	endif & $
+	
+	if A ge 9 and A lt 99 then begin & $
+		YEARDAY_ARRAY(A)='0' + STRING_A & $
+	endif & $
+	
+	if A ge 99 then begin & $
+		YEARDAY_ARRAY(A)=STRING_A & $
+	endif & $
+
+endfor
+
+;print, YEARDAY_ARRAY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for B=0, n_elements(TEMPORAL_AVERAGE_TYPES) - 1 do begin & $
+
+
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define TEMPORAL_AVERAGE_TYPE, the Bth element of 
+	;TEMPORAL_AVERAGE_TYPES.
+	
+	TEMPORAL_AVERAGE_TYPE=TEMPORAL_AVERAGE_TYPES(B) & $
+	;help, TEMPORAL_AVERAGE_TYPE & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Constructing ', TEMPORAL_AVERAGE_TYPE, ' temporal averages ...' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define YEAR_TEMPORAL_AVERAGE_AMOUNT, the number of complete 
+	;TEMPORAL_AVERAGE_TYPE's within TEMPORAL_AVERAGE_YEAR.
+	
+	case TEMPORAL_AVERAGE_TYPE of & $
+	
+		'MONTH': YEAR_TEMPORAL_AVERAGE_AMOUNT=12 & $
+		
+		'SEASON': YEAR_TEMPORAL_AVERAGE_AMOUNT=4 & $
+		
+		'YEAR': YEAR_TEMPORAL_AVERAGE_AMOUNT=1 & $
+		
+		'ALL': YEAR_TEMPORAL_AVERAGE_AMOUNT=1 & $
+		
+		else: begin & $
+			D_POSITION=strpos(TEMPORAL_AVERAGE_TYPE, 'D', /reverse_search) & $
+			
+			FLOAT_TEMPORAL_AVERAGE_TYPE=float((strmid(TEMPORAL_AVERAGE_TYPE, 0, D_POSITION))) & $
+			
+			YEAR_TEMPORAL_AVERAGE_AMOUNT=floor(YEAR_YEARDAY_AMOUNT/FLOAT_TEMPORAL_AVERAGE_TYPE) & $
+			
+			;help, D_POSITION, FLOAT_TEMPORAL_AVERAGE_TYPE & $
+		end & $
+		
+	endcase & $
+	
+	;help, YEAR_TEMPORAL_AVERAGE_AMOUNT & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define YEARDAY_COUNT, and initially set it to zero. YEARDAY_COUNT 
+	;will range from 0 to 365, and is used to index YEARDAY_ARRAY.
+	
+	YEARDAY_COUNT=0 & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	for C=0, YEAR_TEMPORAL_AVERAGE_AMOUNT - 1 do begin & $
+	
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Define STRING_C, the result of converting C to a string.
+		
+		STRING_C=strcompress(string(C), /remove_all) & $
+		;help, STRING_C & $
+		
+		print, '' & $
+		print, '' & $
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		print, 'Constructing ', TEMPORAL_AVERAGE_TYPE, ' temporal average # ', STRING_C, ' ...' & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		case TEMPORAL_AVERAGE_TYPE of & $
+			
+			'MONTH': begin & $
+				if YEAR_TYPE eq 'NORMAL' then MONTH_YEARDAY_AMOUNT_ARRAY=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] & $
+				if YEAR_TYPE eq 'LEAP' then MONTH_YEARDAY_AMOUNT_ARRAY=[31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] & $
+				
+				TEMPORAL_AVERAGE_YEARDAY_AMOUNT=MONTH_YEARDAY_AMOUNT_ARRAY(C) & $
+			end & $
+			
+			'SEASON': begin & $
+				if YEAR_TYPE eq 'NORMAL' then SEASON_YEARDAY_AMOUNT_ARRAY=[90, 91, 92, 92] & $
+				if YEAR_TYPE eq 'LEAP' then SEASON_YEARDAY_AMOUNT_ARRAY=[91, 91, 92, 92] & $
+				
+				TEMPORAL_AVERAGE_YEARDAY_AMOUNT=SEASON_YEARDAY_AMOUNT_ARRAY(C) & $
+			end & $
+			
+			'YEAR': TEMPORAL_AVERAGE_YEARDAY_AMOUNT=YEAR_YEARDAY_AMOUNT & $
+			
+			'ALL': TEMPORAL_AVERAGE_YEARDAY_AMOUNT=YEAR_YEARDAY_AMOUNT & $
+			
+			else: TEMPORAL_AVERAGE_YEARDAY_AMOUNT=FLOAT_TEMPORAL_AVERAGE_TYPE & $
+			
+		endcase & $
+		
+		;help, TEMPORAL_AVERAGE_YEARDAY_AMOUNT & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Define TEMPORAL_AVERAGE_FLAT_FILE_COUNT, and 
+		;initially set it to 0.
+		
+		TEMPORAL_AVERAGE_FLAT_FILE_COUNT=0 & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		for D=0, TEMPORAL_AVERAGE_YEARDAY_AMOUNT - 1 do begin & $
+		
+		
+		
+		
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define YEARDAY.
+			YEARDAY=YEARDAY_ARRAY(YEARDAY_COUNT) & $
+			;help, YEARDAY & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define YEARDAY_FLAT_FILE_PATTERN.
+			
+			YEARDAY_FLAT_FILE_PATTERN='[AST]' + TEMPORAL_AVERAGE_YEAR + YEARDAY + '*' + FLAT_FILE_XDIM + 'x' + FLAT_FILE_YDIM +'.flat' & $
+			;help, YEARDAY_FLAT_FILE_PATTERN & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define YEARDAY_FLAT_FILE_LIST, the list of all the 
+			;Level-2 flat files in the current directory with 
+			;file names corresponding to
+			;YEARDAY_LEVEL2_FLATFILE_PATTERN.
+			
+			YEARDAY_FLAT_FILE_LIST=file_search('./' + YEARDAY_FLAT_FILE_PATTERN) & $
+			;help, YEARDAY_FLAT_FILE_LIST & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			print, '' & $
+			print, '' & $
+			print, 'Listing all ', YEARDAY_FLAT_FILE_PATTERN, ' Level-2 flat files ...' & $
+			
+			if YEARDAY_FLAT_FILE_LIST(0) eq '' then begin & $
+				print, '' & $
+				print, '' & $
+				print, 'No such files exist!' & $
+				
+			endif else begin & $
+			
+				print, '' & $
+				print, '' & $
+				print, YEARDAY_FLAT_FILE_LIST & $
+			
+				if TEMPORAL_AVERAGE_FLAT_FILE_COUNT eq 0 then TEMPORAL_AVERAGE_FLAT_FILE_LIST=YEARDAY_FLAT_FILE_LIST & $
+				if TEMPORAL_AVERAGE_FLAT_FILE_COUNT ne 0 then TEMPORAL_AVERAGE_FLAT_FILE_LIST=[TEMPORAL_AVERAGE_FLAT_FILE_LIST, YEARDAY_FLAT_FILE_LIST] & $
+				
+			endelse & $	
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define TEMPORAL_AVERAGE_START_YEARDAY and 
+			;TEMPORAL_AVERAGE_END_YEARDAY.
+			
+			case TEMPORAL_AVERAGE_TYPE of & $
+			
+				'ALL': begin & $
+				
+					if TEMPORAL_AVERAGE_FLAT_FILE_COUNT eq 0 then begin & $
+						TEMPORAL_AVERAGE_START_YEARDAY=YEARDAY & $
+						TEMPORAL_AVERAGE_END_YEARDAY=YEARDAY & $
+					endif & $
+					
+					if TEMPORAL_AVERAGE_FLAT_FILE_COUNT ne 0 then TEMPORAL_AVERAGE_END_YEARDAY=YEARDAY & $
+					
+				end & $
+				      
+				else: begin & $
+				           if D eq 0 then TEMPORAL_AVERAGE_START_YEARDAY=YEARDAY & $
+				           if D ne 0 then TEMPORAL_AVERAGE_END_YEARDAY=YEARDAY & $
+				      end & $
+			endcase & $
+			
+			;help, TEMPORAL_AVERAGE_START_YEARDAY, TEMPORAL_AVERAGE_END_YEARDAY & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			if YEARDAY_FLAT_FILE_LIST(0) ne '' then begin & $
+				TEMPORAL_AVERAGE_FLAT_FILE_COUNT=TEMPORAL_AVERAGE_FLAT_FILE_COUNT + n_elements(YEARDAY_FLAT_FILE_LIST) & $
+			endif & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Increment YEARDAY_COUNT by 1.
+			
+			YEARDAY_COUNT=YEARDAY_COUNT + 1 & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		endfor & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		if TEMPORAL_AVERAGE_FLAT_FILE_COUNT eq 0 then begin & $
+			
+			print, '' & $
+			print, '' & $
+			print, 'NOTE: No Level-2 flat files exist to be temporally averaged!' & $
+			print, SEPARATOR & $
+			print, SEPARATOR & $
+			
+			continue & $
+			
+		endif & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+		print, '' & $
+		print, '' & $
+		print, 'Level-2 flat files to be temporally averaged:' & $
+		print, '' & $
+		print, '' & $
+		print, TEMPORAL_AVERAGE_FLAT_FILE_LIST & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+			
+			
+			
+			
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+		;Define TEMPORAL_AVERAGE_COUNT_ARRAY, and
+		;TEMPORAL_AVERAGE_TOTAL_ARRAY.
+			
+		TEMPORAL_AVERAGE_COUNT_ARRAY=fltarr(FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM) & $
+		TEMPORAL_AVERAGE_TOTAL_ARRAY=fltarr(FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM) & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+			
+			
+			
+			
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+		for E=0,TEMPORAL_AVERAGE_FLAT_FILE_COUNT - 1 do begin & $
+			
+			
+				
+				
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+			;Define TEMPORAL_AVERAGE_FLAT_FILE_NAME.
+				
+			TEMPORAL_AVERAGE_FLAT_FILE_NAME=TEMPORAL_AVERAGE_FLAT_FILE_LIST(E) & $
+				
+			print, '' & $
+			print, '' & $
+			print, 'Averaging ', TEMPORAL_AVERAGE_FLAT_FILE_NAME, ' ...' & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				
+				
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define TEMPORAL_AVERAGE_FLAT_FILE_ARRAY.
+				
+			TEMPORAL_AVERAGE_FLAT_FILE_ARRAY=fltarr(FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM) & $
+				
+			openr, LUN, TEMPORAL_AVERAGE_FLAT_FILE_NAME, /get_lun & $
+			readu, LUN, TEMPORAL_AVERAGE_FLAT_FILE_ARRAY & $
+			free_lun, LUN & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				
+				
+				
+				
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;Define GOOD_LOCATIONS.
+				
+			GOOD_LOCATIONS=where(finite(TEMPORAL_AVERAGE_FLAT_FILE_ARRAY) eq 1.0) & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			if GOOD_LOCATIONS(0) ne -1 then begin & $
+				 TEMPORAL_AVERAGE_COUNT_ARRAY(GOOD_LOCATIONS)=TEMPORAL_AVERAGE_COUNT_ARRAY(GOOD_LOCATIONS) + 1.0 & $
+				 TEMPORAL_AVERAGE_TOTAL_ARRAY(GOOD_LOCATIONS)=TEMPORAL_AVERAGE_TOTAL_ARRAY(GOOD_LOCATIONS) + TEMPORAL_AVERAGE_FLAT_FILE_ARRAY(GOOD_LOCATIONS) & $
+			endif & $
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+		endfor & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+			
+			
+			
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Define TEMPORAL_AVERAGE_ARRAY.
+			
+		TEMPORAL_AVERAGE_ARRAY=(TEMPORAL_AVERAGE_TOTAL_ARRAY)/(TEMPORAL_AVERAGE_COUNT_ARRAY) & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Define TEMPORAL_AVERAGE_FLAT_FILE_OUTPUT_NAME.
+		
+		SENSOR=strmid(TEMPORAL_AVERAGE_FLAT_FILE_NAME, 0, 1) & $
+		
+		BASE=strmid(TEMPORAL_AVERAGE_FLAT_FILE_NAME, 14) & $
+		
+		case TEMPORAL_AVERAGE_TYPE of & $
+			
+			'1D': TEMPORAL_AVERAGE_FLAT_FILE_OUTPUT_NAME=SENSOR + TEMPORAL_AVERAGE_YEAR + TEMPORAL_AVERAGE_START_YEARDAY + '_' + TEMPORAL_AVERAGE_TYPE + BASE & $
+			
+			else: TEMPORAL_AVERAGE_FLAT_FILE_OUTPUT_NAME=SENSOR + TEMPORAL_AVERAGE_YEAR + TEMPORAL_AVERAGE_START_YEARDAY + TEMPORAL_AVERAGE_YEAR + TEMPORAL_AVERAGE_END_YEARDAY + '_' + TEMPORAL_AVERAGE_TYPE + BASE & $
+			
+		endcase & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;Write out TEMPORAL_AVERAGE_ARRAY as a floating point flat 
+		;file to the harddrive.
+		
+		openw,  LUN, TEMPORAL_AVERAGE_FLAT_FILE_OUTPUT_NAME, /get_lun & $
+		writeu, LUN, TEMPORAL_AVERAGE_ARRAY & $
+		free_lun, LUN & $
+		
+		print, '' & $
+		print, '' & $
+		print, 'Writing out ', TEMPORAL_AVERAGE_FLAT_FILE_OUTPUT_NAME, ' ...' & $ 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		print, SEPARATOR & $
+		print, SEPARATOR & $
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		
+		
+		
+		
+	endfor & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

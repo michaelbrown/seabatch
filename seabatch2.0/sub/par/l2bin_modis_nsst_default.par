@@ -1,0 +1,7 @@
+flaguse=LAND,~HISOLZ
+l3bprod=sst;-2
+prodtype=regional
+rowgroup=270 
+qual_prod=qual_sst
+qual_max=3
+verbose=1

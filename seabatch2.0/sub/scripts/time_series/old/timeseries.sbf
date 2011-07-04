@@ -1,0 +1,234 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_XDIM='766'
+FLAT_FILE_YDIM='383'
+
+FLAT_FILE_WEST='-134'
+FLAT_FILE_EAST='-132'
+FLAT_FILE_NORTH='70'
+FLAT_FILE_SOUTH='69'
+
+TIME_SERIES_RESOLUTION='SECOND'
+TIME_SERIES_START_TIME='2002195123015'
+TIME_SERIES_END_TIME='2002204501264'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='timeseries.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, FLOAT_FLAT_FILE_WEST,
+;FLOAT_FLAT_FILE_EAST, FLOAT_FLAT_FILE_NORTH, and FLOAT_FLAT_FILE_SOUTH, 
+;the result of converting FLAT_FILE_XDIM, FLAT_FILE_YDIM, FLAT_FILE_WEST,
+;FLAT_FILE_NORTH, and FLAT_FILE_SOUTH from string variables to floating 
+;point variables.
+
+FLOAT_FLAT_FILE_XDIM=float(FLAT_FILE_XDIM)
+FLOAT_FLAT_FILE_YDIM=float(FLAT_FILE_YDIM)
+help, FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM
+
+FLOAT_FLAT_FILE_WEST=float(FLAT_FILE_WEST)
+FLOAT_FLAT_FILE_EAST=float(FLAT_FILE_EAST)
+FLOAT_FLAT_FILE_NORTH=float(FLAT_FILE_NORTH)
+FLOAT_FLAT_FILE_SOUTH=float(FLAT_FILE_SOUTH)
+help, FLOAT_FLAT_FILE_WEST, FLOAT_FLAT_FILE_EAST, 
+
+;Define FLAT_FILE_LATITUDE_RANGE and FLAT_FILE_LONGITUDE_RANGE, FLOAT_FLAT_FILE_NORTH, FLOAT_FLAT_FILE_SOUTH
+FLAT_FILE_LATITUDE_RANGE=FLOAT_FLAT_FILE_NORTH - FLOAT_FLAT_FILE_SOUTH
+FLAT_FILE_LONGITUDE_RANGE=FLOAT_FLAT_FILE_EAST - FLOAT_FLAT_FILE_WEST
+help, FLAT_FILE_LATITUDE_RANGE, FLAT_FILE_LONGITUDE_RANGE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define TIMESERIES_VECTOR.
+
+TIMESERIES_VECTOR=fltarr(3, FLATFILE_AMOUNT)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+for A=0, FLATFILE_AMOUNT - 1 do begin & $
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;
+	
+	TIMESERIES_VECTOR(0,A)=A & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define CURRENT_FLATFILE, the "Ath" element of FLATFILES.
+	CURRENT_FLATFILE=FLATFILES(A) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Current flat file: ', CURRENT_FLATFILE & $
+	
+	;Define CURRENT_FLAT_ARRAY, a floating point array containing
+	;CURRENT_FLAT_FILE.
+	CURRENT_FLAT_ARRAY=fltarr(FLOAT_FLATFILE_XDIM, FLOAT_FLATFILE_YDIM) & $
+	
+	openr, LUN, CURRENT_FLATFILE, /get_lun & $
+	readu, LUN, CURRENT_FLAT_ARRAY & $
+	free_lun, LUN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define REGION_ARRAY, the subset of CURRENT_FLAT_ARRAY at 
+	;REGION_INDICES.
+	
+	REGION_ARRAY=CURRENT_FLAT_ARRAY(REGION_INDICES) & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define REGION_ARRAY_MEAN, the mean of REGION_ARRAY.
+	
+	REGION_ARRAY_MEAN=mean(REGION_ARRAY, /nan) & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Region mean: ', REGION_ARRAY_MEAN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define REGION_ARRAY_STDDEV, the standard deviation of REGION_ARRAY.
+	
+	REGION_ARRAY_MEAN=mean(REGION_ARRAY, /nan) & $
+	
+	print, '' & $
+	print, '' & $
+	print, 'Region mean: ', REGION_ARRAY_MEAN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Set the Ath value of TIMESERIES_VECTOR equal to REGION_ARRAY_MEAN.
+	
+	TIMESERIES_VECTOR(1,A)=REGION_ARRAY_MEAN & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define TIMESERIES_OUT_NAME, the name of the text file containing
+;TIMESERIES_VECTOR. Write out TIMESERIES_VECTOR to TIMESERIES_OUT_NAME.
+
+TIMESERIES_OUT_NAME=TIMESERIES_START_DATE + '_to_' + TIMESERIES_END_DATE + '_timeseries.txt'
+
+print, '' 
+print, '' 
+print, SEPARATOR
+print, SEPARATOR
+print, 'Writing out ', TIMESERIES_OUT_NAME, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+
+openw, lun, TIMESERIES_OUT_NAME, /get_lun
+printf, lun, TIMESERIES_VECTOR
+free_lun, lun
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+REGION_X_INDICES=round((-FLOAT_FLATFILE_WEST + FLOAT_REGION_LON_BOUNDS)*((FLOAT_FLATFILE_XDIM - 1)/FLATFILE_LON_RANGE))
+REGION_Y_INDICES=round((FLOAT_FLATFILE_NORTH - FLOAT_REGION_LAT_BOUNDS)*((FLOAT_FLATFILE_YDIM - 1)/FLATFILE_LAT_RANGE))
+;help, REGION_X_INDICES, REGION_Y_INDICES
+
+REGION_INDICES=polyfillv(REGION_X_INDICES, REGION_Y_INDICES, FLOAT_FLATFILE_XDIM, FLOAT_FLATFILE_YDIM)
+;print, REGION_INDICES
+
+REGION_DISPLAY_ARRAY=fltarr(FLOAT_FLATFILE_XDIM,FLOAT_FLATFILE_YDIM)
+REGION_DISPLAY_ARRAY(REGION_INDICES)=1
+
+window, 0, xsize=FLOAT_FLATFILE_XDIM, ysize=FLOAT_FLATFILE_YDIM
+tvscl, REGION_DISPLAY_ARRAY, /o
+MAP_SET, /CYLINDRICAL, /NOBORDER, XMARGIN=0, YMARGIN=0, /NOERASE, /ISOTROPIC, LIMIT=[FLOAT_FLATFILE_SOUTH, FLOAT_FLATFILE_WEST, FLOAT_FLATFILE_NORTH, FLOAT_FLATFILE_EAST]
+MAP_CONTINENTS, /COASTS, COLOR=!D.TABLE_SIZE-1, /HIRES
+
+REGION_DISPLAY_PNG_NAME='region.png'
+
+write_png, REGION_DISPLAY_PNG_NAME, tvrd(/true)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

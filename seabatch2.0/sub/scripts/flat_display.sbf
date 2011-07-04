@@ -1,0 +1,249 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+FLAT_FILE_PATTERN='*.flat'
+FLAT_FILE_XDIM='766'
+FLAT_FILE_YDIM='383'
+
+FLAT_FILE_WEST='-134'
+FLAT_FILE_EAST='-132'
+FLAT_FILE_NORTH='70'
+FLAT_FILE_SOUTH='69'
+
+IMAGE_SCALE_MIN='0'
+IMAGE_SCALE_MAX='5'
+IMAGE_SCALE_TYPE='LIN'
+IMAGE_COLOR_TABLE='$SEADAS/config/color_luts/standard/09-standard_nlw.lut'
+
+COLOR_BAR='NO'
+COASTLINE='YES'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SEABATCH_SCRIPT_NAME='flat_display.sbf'
+SEABATCH_SCRIPT_VERSION='1.0'
+SEPARATOR='==========================================================================='
+
+print, ''
+print, ''
+print, SEPARATOR
+print, SEPARATOR
+print, 'Running ', SEABATCH_SCRIPT_NAME, ', v', SEABATCH_SCRIPT_VERSION, ' ...'
+print, SEPARATOR
+print, SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLOAT_FLAT_FILE_XDIM, FLOAT_FLAT_FILE_YDIM, FLOAT_DISPLAY_MIN, 
+;FLOAT_DISPLAY_MAX, and FLOAT_TIME, the result of converting 
+;FLAT_FILE_XDIM, FLAT_FILE_YDIM, DISPLAY_MIN, DISPLAY_MAX, and TIME to 
+;floating point variables, respectively.
+
+FLOAT_FLAT_FILE_XDIM=float(FLAT_FILE_XDIM)
+FLOAT_FLAT_FILE_YDIM=float(FLAT_FILE_YDIM)
+
+FLOAT_FLAT_FILE_NORTH=float(FLAT_FILE_NORTH)
+FLOAT_FLAT_FILE_SOUTH=float(FLAT_FILE_SOUTH)
+FLOAT_FLAT_FILE_EAST=float(FLAT_FILE_EAST)
+FLOAT_FLAT_FILE_WEST=float(FLAT_FILE_WEST)
+
+FLOAT_IMAGE_SCALE_MIN=float(IMAGE_SCALE_MIN)
+FLOAT_IMAGE_SCALE_MAX=float(IMAGE_SCALE_MAX)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Define FLAT_FILES, a list of the files in the current directory whose 
+;names match the pattern specified by FLAT_FILE_PATTERN. Define 
+;FLAT_FILE_AMOUNT, the number of flat files.
+
+FLAT_FILES=findfile(FLAT_FILE_PATTERN)
+
+FLAT_FILE_AMOUNT=n_elements(FLAT_FILES)
+
+print, ''
+print, ''
+print, separator
+print, separator
+print, 'Flat files to be displayed:'
+print, ''
+print, FLAT_FILES
+print, separator
+print, separator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+loadct, 13
+
+for A=0, FLAT_FILE_AMOUNT - 1 do begin & $
+
+
+
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Define FLAT_FILE_NAME, the "Ath" element of FILE_FILES.
+	
+	FLAT_FILE_NAME=FLAT_FILES(A) & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	print, 'Flat file: ', FLAT_FILE_NAME & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Load the flat file corresponding to FLAT_FILE_NAME into the SeaDAS
+	;memory.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Loading ', FLAT_FILE_NAME, ' ...' & $
+	
+	load, FLAT_FILE_NAME, ftype='FLAT', pixel=FLAT_FILE_XDIM, line=FLAT_FILE_YDIM, datatype=4, latlon=[FLOAT_FLAT_FILE_NORTH, FLOAT_FLAT_FILE_WEST, FLOAT_FLAT_FILE_SOUTH, FLOAT_FLAT_FILE_EAST] & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Display the loaded flat file corresponding to FLAT_FILE_NAME into
+	;the SeaDAS memory.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Displaying ', FLAT_FILE_NAME, ' ...' & $
+	
+	display, band_no=1, smin=FLOAT_IMAGE_SCALE_MIN, smax=FLOAT_IMAGE_SCALE_MAX, stype=IMAGE_SCALE_TYPE & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Apply IMAGE_COLOR_TABLE.
+	
+	print, '' & $
+	print, '' & $
+	print, 'Applying color table ', IMAGE_COLOR_TABLE, ' ...' & $
+	loadpal, IMAGE_COLOR_TABLE & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;If COLOR_BAR equals 'YES' then append a color bar.
+	
+	if COLOR_BAR eq 'YES' then begin & $
+	
+		print, '' & $
+		print, '' & $
+		print, 'Appending color bar ...' & $
+		
+		cbar & $
+		
+	endif & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;If COASTLINE equals 'YES' then overlay a coastline.
+	
+	if COASTLINE eq 'YES' then begin & $
+	
+		print, '' & $
+		print, '' & $
+		print, 'Overlaying coastline ...' & $
+		
+		coast & $
+		
+	endif & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Write out the loaded and displayed CURRENT_FLAT_FILE to the hard
+	;drive.
+	
+	UNDERSCORE_POSITION=strpos(FLAT_FILE_NAME, '_', /reverse_search) & $
+	
+	FLAT_FILE_BASE_NAME=strmid(FLAT_FILE_NAME, 0, UNDERSCORE_POSITION) & $
+	
+	IMAGE_OUT_NAME=FLAT_FILE_BASE_NAME + '.png' & $
+	ASCII_OUT_NAME=FLAT_FILE_BASE_NAME + '.asc' & $
+	
+	print, '' & $
+	print, '' & $
+	
+	out, IMAGE_OUT_NAME, /DISPLAY, ftype=PNG & $
+	out_ascii, ASCII_OUT_NAME, band_no=1, vars=[2,3,4] & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;Release the memory used by loaded bands and windows for reuse.
+	
+	clear_up & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	
+	
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	print, SEPARATOR & $
+	print, SEPARATOR & $
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+endfor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
