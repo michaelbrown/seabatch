@@ -49,6 +49,10 @@ openr, LUN, 'load_output_parameter_file.txt', /get_lun
 LOADED_FILE_TYPE=''
 readf, LUN, LOADED_FILE_TYPE
 
+;Read in SENSOR.
+SENSOR=''
+readf, LUN, SENSOR
+
 ;Read in LOADED_FILE.
 LOADED_FILE=''
 readf, LUN, LOADED_FILE
@@ -103,6 +107,7 @@ print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
 print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- SENSOR: ', SENSOR
 print, '- LOADED_FILE: ', LOADED_FILE
 print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
 print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
@@ -186,31 +191,35 @@ if ((FORCED_LOAD_X_DIMENSION eq 'DEFAULT')) and ((FORCED_LOAD_Y_DIMENSION eq 'DE
 
 	endif & $
 
-	if LOADED_FILE_TYPE eq 'OBPG_MODIS_L3_BIN' then begin & $
+	if LOADED_FILE_TYPE eq 'OBPG_L3_BIN' then begin & $
 
-		print, '' & $
-		print, LOADED_FILE, ' is an OBPG MODIS Level-3 Binned file.' & $
+		if SENSOR eq 'AQUA' or SENSOR eq 'TERRA' then begin & $
 
-		SPATIAL_BIN='4' & $
+			print, '' & $
+			print, LOADED_FILE, ' is a OBPG MODIS Level-3 Binned file.' & $
 
-		print, '' & $		
-		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
-		print, '' & $
-		print, 'NOTE: This assumes that all OBPG distributed MODIS Level-3 Binned files have a spatial resolution of 4 km.' & $
+			SPATIAL_BIN='4' & $
 
-	endif & $
+			print, '' & $		
+			print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+			print, '' & $
+			print, 'NOTE: This assumes that all OBPG distributed MODIS Level-3 Binned files have a spatial resolution of 4 km.' & $
 
-	if LOADED_FILE_TYPE eq 'OBPG_SEAWIFS_L3_BIN' then begin & $
+		endif & $
 
-		print, '' & $
-		print, LOADED_FILE, ' is an OBPG SeaWiFS Level-3 Binned file.' & $
+		if SENSOR eq 'SEAWIFS' then begin & $
 
-		SPATIAL_BIN='9' & $
+			print, '' & $
+			print, LOADED_FILE, ' is an OBPG SeaWiFS Level-3 Binned file.' & $
 
-		print, '' & $		
-		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
-		print, '' & $
-		print, 'NOTE: This assumes that all OBPG distributed SeaWiFS Level-3 Binned files have a spatial resolution of 9 km.' & $
+			SPATIAL_BIN='9' & $
+
+			print, '' & $		
+			print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+			print, '' & $
+			print, 'NOTE: This assumes that all OBPG distributed SeaWiFS Level-3 Binned files have a spatial resolution of 9 km.' & $
+
+		endif & $
 
 	endif & $
 

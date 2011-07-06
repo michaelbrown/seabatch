@@ -49,6 +49,10 @@ openr, LUN, 'load_output_parameter_file.txt', /get_lun
 LOADED_FILE_TYPE=''
 readf, LUN, LOADED_FILE_TYPE
 
+;Read in SENSOR.
+SENSOR=''
+readf, LUN, SENSOR
+
 ;Read in LOADED_FILE.
 LOADED_FILE=''
 readf, LUN, LOADED_FILE
@@ -79,6 +83,7 @@ print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
 print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- SENSOR: ', SENSOR
 print, '- LOADED_FILE: ', LOADED_FILE
 print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
 print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
@@ -94,10 +99,20 @@ print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 
-PERIOD_POSITION=strpos(LOADED_FILE, '.')
+if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
 
-if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_MODIS_L3_BIN' or LOADED_FILE_TYPE eq 'SEABATCH_SEAWIFS_L3_BIN' then begin & $
-	BASENAME=strmid(LOADED_FILE, 0, PERIOD_POSITION) + '_' + strmid(LOADED_FILE, PERIOD_POSITION + 1) + '_' + OUTPUT_PRODUCT + '_' + OUTPUT_STATISTIC & $
+	FIRST_PERIOD_POSITION=strpos(LOADED_FILE, '.') & $
+	BASENAME=strmid(LOADED_FILE, 0, FIRST_PERIOD_POSITION) + '_' + strmid(LOADED_FILE, FIRST_PERIOD_POSITION + 1) + '_' + OUTPUT_PRODUCT + '_' + OUTPUT_STATISTIC & $
+
+endif
+
+if LOADED_FILE_TYPE eq 'OBPG_L3_BIN' then begin & $
+
+	FIRST_PERIOD_POSITION=strpos(LOADED_FILE, '.') & $
+	SECOND_PERIOD_POSITION=strpos(LOADED_FILE, '.', /reverse_search) & $
+	PERIOD_POSITION_DIFFERENCE=SECOND_PERIOD_POSITION - FIRST_PERIOD_POSITION & $
+	BASENAME=strmid(LOADED_FILE, 0, FIRST_PERIOD_POSITION) + '_' + strmid(LOADED_FILE, FIRST_PERIOD_POSITION + 1, PERIOD_POSITION_DIFFERENCE - 1) + '_' + OUTPUT_PRODUCT + '_' + OUTPUT_STATISTIC & $
+
 endif
 
 openw, LUN, 'load_output_parameter_file.txt', /get_lun, /APPEND

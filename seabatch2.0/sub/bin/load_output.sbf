@@ -49,6 +49,10 @@ openr, LUN, 'load_output_parameter_file.txt', /get_lun
 LOADED_FILE_TYPE=''
 readf, LUN, LOADED_FILE_TYPE
 
+;Read in SENSOR.
+SENSOR=''
+readf, LUN, SENSOR
+
 ;Read in LOADED_FILE.
 LOADED_FILE=''
 readf, LUN, LOADED_FILE
@@ -99,7 +103,7 @@ readf, LUN, MODIS_SST_QUALITY
 OUTPUT_FILE_TYPE=''
 readf, LUN, OUTPUT_FILE_TYPE
 
-;Read in DISPLAY_SETTING
+;Read in DISPLAY_SETTING.
 DISPLAY_SETTING=''
 readf, LUN, DISPLAY_SETTING
 
@@ -157,6 +161,7 @@ print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
 print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
+print, '- SENSOR: ', SENSOR
 print, '- LOADED_FILE: ', LOADED_FILE
 print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
 print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
@@ -194,7 +199,7 @@ print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 
-if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
+if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' then begin & $
 
 	print, '' & $
 	print, '' & $
@@ -251,9 +256,13 @@ if DISPLAY_SETTING eq 'YES' then begin & $
 	print, SEABATCH_SEPARATOR & $
 	print, SEABATCH_SEPARATOR & $
 
-	display, band_no=1, smin=float(DISPLAY_MIN), smax=float(DISPLAY_MAX), stype=DISPLAY_TYPE, /GEO & $
+	if DISPLAY_MIN eq 'DEFAULT' or DISPLAY_MAX eq 'DEFAULT' then begin & $
+		display, band_no=1, stype=DISPLAY_TYPE, /GEO & $
+	endif else begin & $
+		display, band_no=1, smin=float(DISPLAY_MIN), smax=float(DISPLAY_MAX), stype=DISPLAY_TYPE, /GEO & $
+	endelse & $
 
-	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' then begin & $
+	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' then begin & $
 	
 		print, '' & $
 		print, '' & $

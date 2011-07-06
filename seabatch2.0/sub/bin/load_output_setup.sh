@@ -72,11 +72,11 @@ source $SEABATCH_PARAMETER_FILE
 echo; echo; seabatch_separator
 seabatch_statement "Processing variables used by ${SEABATCH_SCRIPT_NAME}:"
 echo
+seabatch_statement "- SENSOR: ${SENSOR}"
 seabatch_statement "- WEST: ${WEST}"
 seabatch_statement "- EAST: ${EAST}"
 seabatch_statement "- NORTH: ${NORTH}"
 seabatch_statement "- SOUTH: ${SOUTH}"
-seabatch_statement "- LOAD: ${LOAD}"
 seabatch_statement "- LOADED_FILE_TYPE: ${LOADED_FILE_TYPE}"
 echo "- OUTPUT_PRODUCTS: ${OUTPUT_PRODUCTS}"
 echo "- OUTPUT_FILE_TYPES: ${OUTPUT_FILE_TYPES[@]}"
@@ -167,7 +167,7 @@ esac
 
 ###########################################################################
 ###########################################################################
-if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_MODIS_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_SEAWIFS_L3_BIN' ]; then
+if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_L3_BIN' ]; then
 
 	if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' ]; then
 
@@ -176,11 +176,19 @@ if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_MODIS_L3
 		FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seabatch_l3_bin.txt'
 
 	fi
-			
+	
+	if [ $LOADED_FILE_TYPE = 'OBPG_L3_BIN' ]; then
+
+		FILE_TYPE='OBPG Level-3 Binned files'
+		FILE_TYPE_PATTERNS=$OBPG_L3_BIN_FILE_PATTERNS
+		FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/obpg_l3_bin.txt'
+
+	fi
+	
 	file_type_list
 	
 	if [ $FILE_TYPE_FILE_AMOUNT -eq 0 ]; then
-		exit 1
+		exit
 	fi
 
 	while read LOADED_FILE; do
@@ -194,6 +202,7 @@ if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_MODIS_L3
 					LOAD_OUTPUT_PARAMETER_FILE='load_output_parameter_file.txt'
 
 					echo $LOADED_FILE_TYPE > $LOAD_OUTPUT_PARAMETER_FILE
+					echo $SENSOR >> $LOAD_OUTPUT_PARAMETER_FILE
 					echo $LOADED_FILE >> $LOAD_OUTPUT_PARAMETER_FILE
 					echo $OUTPUT_PRODUCT >> $LOAD_OUTPUT_PARAMETER_FILE
 					echo $OUTPUT_STATISTIC >> $LOAD_OUTPUT_PARAMETER_FILE
@@ -238,6 +247,8 @@ if [ $LOADED_FILE_TYPE = 'SEABATCH_L3_BIN' -o $LOADED_FILE_TYPE = 'OBPG_MODIS_L3
 					echo $COLOR_BAR_ORIENTATION >> $LOAD_OUTPUT_PARAMETER_FILE
 
 					run_seadas_batch_file ${SEABATCH_BIN_DIRECTORY}'/load_output.sbf'
+
+					rm $LOAD_OUTPUT_PARAMETER_FILE
 
 				done
 
