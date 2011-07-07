@@ -941,7 +941,152 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 
 
 
+
+	###################################################################
+	###################################################################
+	if [ $SENSOR = 'SEAWIFS' ]; then
+
+
+
+
+		###########################################################
+		###########################################################
+		echo; echo; seabatch_separator
+		seabatch_statement "Begin Level-2 to Level-3 ${SPATIAL_BIN} km spatial binning of SeaWiFS Level-2 Ocean Color files ..."
+		seabatch_separator
+		###########################################################
+		###########################################################
+			
+			
+			
+		
+		###########################################################
+		###########################################################
+		FILE_TYPE='SeaWiFS Level-2 Ocean Color files'
+		FILE_TYPE_PATTERNS=$SEAWIFS_L2_OC_FILE_PATTERNS
+		FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2_oc_'${SPATIAL_BIN}'km.txt'
+			
+		file_type_list
+			
+		if [ $FILE_TYPE_FILE_AMOUNT -eq 0 ]; then
+			exit 1
+		fi
+		###########################################################
+		###########################################################
+			
+			
+			
+			
+		###########################################################
+		###########################################################
+		while read SEAWIFS_L2_OC_FILE; do
+		
+		
+		
+		
+			###################################################
+			###################################################
+			echo; echo; seabatch_separator
+			seabatch_statement "Current SeaWiFS Level-2 Ocean Color file: ${SEAWIFS_L2_OC_FILE}"
+			seabatch_separator
+			###################################################
+			###################################################
+					
+					
+					
+					
+			###################################################
+			###################################################
+			#Define BASE, the basename of 
+			#SEAWIFS_L2_OC_FILE.
+			
+			BASE=$(echo $SEAWIFS_L2_OC_FILE | awk -F. '{ print $1 }')
+			###################################################
+			###################################################
+					
+					
+					
+					
+			###################################################
+			###################################################
+			#Define SEAWIFS_L2BIN_OC_FILE, the name of 
+			#the spatially binned SEAWIFS_L2_OC_FILE.
+
+			SEAWIFS_L2BIN_OC_FILE=${BASE}'.L2b_OC_'${SPATIAL_BIN}'km'
+			###################################################
+			###################################################
+				
+				
+				
+				
+			###################################################
+			###################################################
+			#If L2BIN_PARAMETER_FILE is set to "DEFAULT" then 
+			#set it to "l2bin_seawifs_oc_default.par".
+
+			if [ $L2BIN_PARAMETER_FILE = 'DEFAULT' ]; then
+				L2BIN_PARAMETER_FILE=${SEABATCH_PARAMETER_DIRECTORY}'/l2bin_seawifs_oc_default.par'
+			fi
+			###################################################
+			###################################################
 	
+					
+					
+					
+			###################################################
+			###################################################
+			#Spatially bin SEAWIFS_L2_OC_FILE with the 
+			#SeaDAS script l2bin.
+			
+			echo; echo; seabatch_separator
+			seabatch_statement "Spatially binning ${SEAWIFS_L2_OC_FILE} at ${SPATIAL_BIN} km (constructing ${SEAWIFS_L2BIN_OC_FILE}) ..."
+			seabatch_separator
+			
+			echo; echo; seabatch_separator
+			seabatch_statement "l2bin parameter file used: ${L2BIN_PARAMETER_FILE}"
+			echo
+			cat $L2BIN_PARAMETER_FILE
+			seabatch_separator; echo; echo
+			
+			l2bin parfile=$L2BIN_PARAMETER_FILE infile=$SEAWIFS_L2_OC_FILE ofile=$SEAWIFS_L2BIN_OC_FILE resolve=$SPATIAL_BIN
+			
+			if [ $? -ne 0 ]; then
+
+				SCRIPT_NAME='l2bin'
+				SCRIPT_ERROR_ACTION='COPY'
+				script_error_action $SEAWIFS_L2_OC_FILE
+
+			fi
+			###################################################
+			###################################################
+					
+					
+					
+					
+		done <$FILE_TYPE_TEXT_FILE
+		###########################################################
+		###########################################################
+				
+				
+				
+					
+		###########################################################
+		###########################################################
+		echo; echo; seabatch_separator
+		seabatch_statement "Level-2 to Level-3 ${SPATIAL_BIN} km spatial binning of SeaWiFS Level-2 Ocean Color files finished!"
+		seabatch_separator
+		###########################################################
+		###########################################################
+
+
+
+	fi
+	###################################################################
+	###################################################################
+
+	
+
+
 done
 ###########################################################################
 ###########################################################################

@@ -226,7 +226,7 @@ fi
 ###########################################################################
 if [ $SENSOR = 'SEAWIFS' ]; then
 	echo; echo; seabatch_separator
-	seabatch_statement "Begin Level-2 to Level-3 temporal binning of spatially binned SeaWiFS Level-2 files ..."
+	seabatch_statement "Begin Level-2 to Level-3 temporal binning of spatially binned SeaWiFS Level-2 Ocean Color files ..."
 	seabatch_separator
 fi
 ###########################################################################
@@ -320,7 +320,7 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 		###########################################################
 		if [ $SENSOR = 'SEAWIFS' ]; then
 			echo; echo; seabatch_separator
-			seabatch_statement "Begin Level-2 to Level-3 ${TEMPORAL_BIN} temporal binning of SeaWiFS Level-2 files spatially binned to ${SPATIAL_BIN} km ..."
+			seabatch_statement "Begin Level-2 to Level-3 ${TEMPORAL_BIN} temporal binning of SeaWiFS Level-2 Ocean Color files spatially binned to ${SPATIAL_BIN} km ..."
 			seabatch_separator
 		fi
 		###########################################################
@@ -601,21 +601,24 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 				if [ $SENSOR = 'SEAWIFS' ]; then
 				
 					if [ $C -eq 0 ]; then
-						L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
+						L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin_oc'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
 					else
 							
 						if [ $TEMPORAL_BIN != 'NS' ]; then
 
 							OLD_L2BIN_TEXT_FILE=$L2BIN_TEXT_FILE
-							L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
-							mv $OLD_L2BIN_TEXT_FILE $L2BIN_TEXT_FILE
+							L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin_oc'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
+							
+							if [ $TEMPORAL_BIN_L2BIN_FILE_AMOUNT -ne 0 ]; then
+								mv $OLD_L2BIN_TEXT_FILE $L2BIN_TEXT_FILE
+							fi
 								
 						fi
 
 					fi
 
-					FILE_TYPE="SeaWiFS Level-2 files, spatially binned to ${SPATIAL_BIN} km, corresponding to YD ${YEARDAY}"
-					FILE_TYPE_PATTERNS='S'${YEAR}${YEARDAY}*'.L2b'${SPATIAL_BIN}'km'
+					FILE_TYPE="SeaWiFS Level-2 Ocean Color files, spatially binned to ${SPATIAL_BIN} km, corresponding to YD ${YEARDAY}"
+					FILE_TYPE_PATTERNS='S'${YEAR}${YEARDAY}*'.L2b_OC_'${SPATIAL_BIN}'km'
 					FILE_TYPE_TEXT_FILE=$L2BIN_TEXT_FILE
 			
 					file_type_list
@@ -682,7 +685,7 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 					fi
 					
 					if [ $SENSOR = 'SEAWIFS' ]; then
-						L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
+						L2BIN_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/seawifs_l2bin_oc'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}'_'${TEMPORAL_BIN_PERIOD}'.txt'
 					fi
 					
 					if [ $YEARDAY_L2BIN_FILE_AMOUNT -ne 0 ]; then
@@ -1092,7 +1095,104 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 			fi
 			###################################################
 			###################################################
+
+
+
+
+			###################################################
+			###################################################
+			if [ $SENSOR = 'SEAWIFS' ]; then
+
+				if [ $TEMPORAL_BIN_L2BIN_FILE_AMOUNT -eq 0 ]; then
+					
+					echo; echo; seabatch_separator
+					seabatch_statement "No SeaWiFS Level-2 Ocean Color files, spatially binned to ${SPATIAL_BIN} km, corresponding to the ${TEMPORAL_BIN} temporal bin YD ${TEMPORAL_BIN_START_YEARDAY} to YD ${TEMPORAL_BIN_END_YEARDAY}, exist!"
+					seabatch_separator
+						
+					continue
+					
+				else
+					
+					echo; echo; seabatch_separator
+					seabatch_statement "$TEMPORAL_BIN_L2BIN_FILE_AMOUNT SeaWiFS Level-2 Ocean Color file(s), spatially binned to ${SPATIAL_BIN} km, corresponding to the ${TEMPORAL_BIN} temporal bin YD ${TEMPORAL_BIN_START_YEARDAY} to YD ${TEMPORAL_BIN_END_YEARDAY}, exist(s)!"
+					echo
+					cat $L2BIN_TEXT_FILE
+					seabatch_separator
+						
+							
+						
+						
+					###########################
+					###########################
+					#Define 
+					#SEAWIFS_L3BIN_OC_FILE, the 
+					#name of the file that 
+					#will result from 
+					#temporally binning the 
+					#above files.
+						
+					if [ $TEMPORAL_BIN_START_YEARDAY = $TEMPORAL_BIN_END_YEARDAY ]; then
+						SEAWIFS_L3BIN_OC_FILE=${SENSOR_ABBREVIATION}${YEAR}${TEMPORAL_BIN_START_YEARDAY}'.L3b_OC_'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}
+					else
+						SEAWIFS_L3BIN_OC_FILE=${SENSOR_ABBREVIATION}${YEAR}${TEMPORAL_BIN_START_YEARDAY}${YEAR}${TEMPORAL_BIN_END_YEARDAY}'.L3b_OC_'${SPATIAL_BIN}'km_'${TEMPORAL_BIN}
+					fi
+					###########################
+					###########################
+						
+						
+						
+						
+					###########################
+					###########################
+					#If L3BIN_PARAMETER_FILE is 
+					#set to "DEFAULT" then set 
+					#it to "l3bin_modis_oc_default.par".
+	
+					if [ $L3BIN_PARAMETER_FILE = 'DEFAULT' ]; then
+						L3BIN_PARAMETER_FILE=${SEABATCH_PARAMETER_DIRECTORY}'/l3bin_seawifs_oc_default.par'
+					fi
+					###########################
+					###########################
+						
+						
+						
+						
+					###########################
+					###########################
+					#Temporally bin the above
+					#files with the SeaDAS
+					#script l3bin.
 			
+					echo; echo; seabatch_separator
+					seabatch_statement "Temporally binning the above files (constructing ${MODIS_L3BIN_OC_FILE}) ..."
+					seabatch_separator
+			
+					echo; echo; seabatch_separator
+					seabatch_statement "l3bin parameter file used: ${L3BIN_PARAMETER_FILE}"
+					echo
+					cat $L3BIN_PARAMETER_FILE
+					seabatch_separator; echo; echo
+			
+					l3bin in=$L2BIN_TEXT_FILE out=$SEAWIFS_L3BIN_OC_FILE parfile=$L3BIN_PARAMETER_FILE
+			
+					if [ $? -ne 0 ]; then
+						
+						SEADAS_SCRIPT_NAME='l3bin'
+						SCRIPT_ERROR_ACTION='DEFAULT'
+						script_error_action $SEAWIFS_L3BIN_OC_FILE
+							
+					fi
+					###########################
+					###########################
+
+					
+					
+						
+				fi
+
+			fi
+			###################################################
+			###################################################
 			
 			
 			
@@ -1174,7 +1274,7 @@ for SPATIAL_BIN in ${SPATIAL_BINS[@]}; do
 		###########################################################
 		if [ $SENSOR = 'SEAWIFS' ]; then
 			echo; echo; seabatch_separator
-			seabatch_statement "Level-2 to Level-3 ${TEMPORAL_BIN} temporal binning of SeaWiFS Level-2 files spatially binned to ${SPATIAL_BIN} km finished!"
+			seabatch_statement "Level-2 to Level-3 ${TEMPORAL_BIN} temporal binning of SeaWiFS Level-2 Ocean Color files spatially binned to ${SPATIAL_BIN} km finished!"
 			seabatch_separator
 		fi
 		###########################################################
@@ -1267,7 +1367,7 @@ fi
 ###########################################################################
 if [ $SENSOR = 'SEAWIFS' ]; then
 	echo; echo; seabatch_separator
-	seabatch_statement "Level-2 to Level-3 temporal binning of spatially binned SeaWiFS Level-2 files finished!"
+	seabatch_statement "Level-2 to Level-3 temporal binning of spatially binned SeaWiFS Level-2 Ocean Color files finished!"
 	seabatch_separator
 fi
 ###########################################################################

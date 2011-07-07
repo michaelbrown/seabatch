@@ -2,16 +2,16 @@
 ###########################################################################
 #ALL processing:
 
-SENSOR='AQUA'
+SENSOR='SEAWIFS'
 
-YEAR='2010'
+YEAR='2004'
 
-WEST=-64.3
-EAST=-63
-NORTH=44.8
-SOUTH=44
+WEST=116
+EAST=126
+NORTH=20
+SOUTH=5
 
-PROCESS='NO'
+PROCESS='YES'
 LOAD='YES'
 ###########################################################################
 ###########################################################################
@@ -34,9 +34,9 @@ L2GEN_PARAMETER_FILE='default'
 #LEVEL-2 to LEVEL-3:
 
 SPATIAL_BINS=(4)
-TEMPORAL_BINS=(1D)
+TEMPORAL_BINS=(8D)
 
-MODIS_SST='SST'
+MODIS_SST='NO'
 
 L2BIN_PARAMETER_FILE='DEFAULT'
 L3BIN_PARAMETER_FILE='DEFAULT'
@@ -49,7 +49,7 @@ L3BIN_PARAMETER_FILE='DEFAULT'
 #If LOAD is set to "YES":
 
 LOADED_FILE_TYPE='SEABATCH_L3_BIN'
-OUTPUT_PRODUCTS=('sst')
+OUTPUT_PRODUCTS=('chlor_a')
 OUTPUT_FILE_TYPES=('KMZ' 'PNG')
 OUTPUT_STATISTICS=(MEAN)
 ###########################################################################
