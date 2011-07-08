@@ -15,11 +15,11 @@
 
 ###########################################################################
 ###########################################################################
-#Source the files ${SEABATCH}/sub/config/seabatch.cfg and
-#${SEABATCH}/master_file.txt.
+#Source the contents of SEABATCH_CONFIGURATION_DIRECTORY.
 
-source ${SEABATCH}'/sub/config/seabatch.cfg'
-source ${SEABATCH}'/master_file.txt'
+for SEABATCH_CONFIGURATION_FILE in $SEABATCH_CONFIGURATION_DIRECTORY/*; do
+	source $SEABATCH_CONFIGURATION_FILE
+done
 ###########################################################################
 ###########################################################################
 
@@ -31,8 +31,8 @@ source ${SEABATCH}'/master_file.txt'
 #Define SEABATCH_SCRIPT_NAME and SEABATCH_SCRIPT_VERSION, the name and
 #version of the current script.
 
-SEABATCH_SCRIPT_NAME=${SEABATCH}'/bin/level1tolevel2.sh'
-SEABATCH_SCRIPT_VERSION='1.2'
+SEABATCH_SCRIPT_NAME=${0}
+SEABATCH_SCRIPT_VERSION='2.0'
 
 run_seabatch_script
 ###########################################################################
@@ -43,18 +43,10 @@ run_seabatch_script
 
 ###########################################################################
 ###########################################################################
-#Display the processing variables used by level1tolevel2.sh.
+#Define SEABATCH_LOG_DIRECTORY, the name of the directory containing the
+#log information of the current SeaBatch run. 
 
-echo; echo; separator
-echo 'Processing variables used by' ${SEABATCH_SCRIPT_NAME}':'
-echo ''
-echo '- SENSOR:' ${SENSOR}
-echo '- YEAR:' ${YEAR}
-echo '- END_LEVEL:' ${END_LEVEL}
-echo '- L2GEN_PRODUCTS:' ${L2GEN_PRODUCTS[@]}
-echo '- L2GEN_RESOLUTION:' ${L2GEN_RESOLUTION}
-echo '- L2GEN_PARAMETER_FILE:' ${L2GEN_PARAMETER_FILE}
-separator
+SEABATCH_LOG_DIRECTORY=${1}
 ###########################################################################
 ###########################################################################
 
@@ -63,19 +55,131 @@ separator
 
 ###########################################################################
 ###########################################################################
-#Define L2_PROCESSING_TYPE (MODIS or SEAWIFS). This is necessary because
-#the MODIS and SeaWiFS Level-1 to Level-2 processing streams are slightly
-#different.
+#Define and source SEABATCH_PARAMETER_FILE, the SeaBatch parameter file 
+#that will be used which contains the user-specified processing variables.
 
-if [ $SENSOR = 'A' -o $SENSOR = 'T' ]; then
-	L2_PROCESSING_TYPE='MODIS'
-fi
-
-if [ $SENSOR = 'S' ]; then
-	L2_PROCESSING_TYPE='SEAWIFS'
-fi
+SEABATCH_PARAMETER_FILE=${2}
+source $SEABATCH_PARAMETER_FILE
 ###########################################################################
 ###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+#Display the processing variables used by level2tolevel3_spatialbin.sh.
+
+echo; echo; seabatch_separator
+seabatch_statement "Processing variables used by ${SEABATCH_SCRIPT_NAME}:"
+echo
+seabatch_statement "- SENSOR: ${SENSOR}"
+seabatch_statement "- YEAR: ${YEAR}"
+seabatch_statement "- WEST: ${WEST}"
+seabatch_statement "- EAST: ${EAST}"
+seabatch_statement "- NORTH: ${NORTH}"
+seabatch_statement "- SOUTH: ${SOUTH}"
+echo "- L2_PRODUCTS: ${L2_PRODUCTS[@]}"
+seabatch_statement "- L2_RESOLUTION: ${L2_RESOLUTION}"
+seabatch_statement "- L2GEN_PARAMETER_FILE: ${L2GEN_PARAMETER_FILE}"
+seabatch_separator
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+if [ $SENSOR = 'AQUA' -o $SENSOR = 'TERRA' ]; then
+	
+	
+	
+	
+	###################################################################
+	###################################################################
+	echo; echo; seabatch_separator
+	seabatch_statement "Begin Level-1 to Level-2 processing of MODIS Level-1A files ..."
+	seabatch_separator
+	###################################################################
+	###################################################################
+
+
+
+
+	###################################################################
+	###################################################################
+	FILE_TYPE='MODIS Level-1A files'
+	FILE_TYPE_PATTERNS=[AT]${YEAR}*.L1A*
+	FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/modis_l1a.txt'
+			
+	file_type_list
+			
+	if [ $FILE_TYPE_FILE_AMOUNT -eq 0 ]; then
+		exit 1
+	fi
+	###################################################################
+	###################################################################
+
+
+
+
+	###################################################################
+	###################################################################
+	while read MODIS_L1A_FILE; do
+		
+		
+		
+		
+		###########################################################
+		###########################################################
+		echo; echo; seabatch_separator
+		seabatch_statement "Current MODIS Level-1A file: ${MODIS_L1A_FILE}"
+		seabatch_separator
+		###########################################################
+		###########################################################
+					
+					
+					
+					
+		###########################################################
+		###########################################################
+		#Define BASENAME, the basename of MODIS_L1A_FILE.
+			
+		BASENAME=$(echo $MODIS_L1A_FILE | awk -F. '{ print $1 }')
+		###########################################################
+		###########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -125,38 +229,6 @@ if [ $L2_PROCESSING_TYPE = 'MODIS' ]; then
 	for L1A_FILE in ${SENSOR}${YEAR}*.L1A_[GL]AC*; do
 	
 	
-	
-	
-		###########################################################
-		###########################################################
-		echo; echo; separator
-		echo 'Current MODIS Level-1A file:' ${L1A_FILE}
-		separator
-		###########################################################
-		###########################################################
-		
-		
-		
-	
-		###########################################################
-		###########################################################
-		#Check that L1A_FILE is a regular file. There is one 
-		#situation where it won't be: if no files exist that 
-		#match the pattern "${SENSOR}${YEAR}*.L1A_[GL]AC*". If 
-		#L1A_FILE is not a regular file then the current 
-		#itteration of the loop stops, and the next one begins.
-		
-		if [ ! -f $L1A_FILE ]; then
-		
-			echo; echo; separator
-			echo ${L1A_FILE} 'is not a regular file. Continuing to next file ...'
-			separator
-			
-			continue
-			
-		fi
-		###########################################################
-		###########################################################
 	
 	
 	
