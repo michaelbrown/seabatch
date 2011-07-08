@@ -68,28 +68,16 @@ source $SEABATCH_PARAMETER_FILE
 
 ###########################################################################
 ###########################################################################
-#Check that initial_check.sh exists:
-#if [ -e ${SEABATCH_DIRECTORY}/sub/bin/initial_check.sh ]; then
-#	echo '- '${SEABATCH_DIRECTORY}'/sub/bin/initial_check.sh exists'
-#			
-#	#If initial_check.sh exists check that it is executable:
-#	if [ -x ${SEABATCH_DIRECTORY}/sub/bin/initial_check.sh ]; then
-#		echo '- '${SEABATCH_DIRECTORY}'/sub/bin/initial_check.sh is executable'
-#	else
-#		echo; echo; echo 'ERROR: '${SEABATCH_DIRECTORY}'/sub/bin/initial_check.sh is not executable'
-#		exit 1
-#	fi
-#else
-#	echo; echo; echo 'ERROR: '${SEABATCH_DIRECTORY}'/sub/bin/initial_check.sh does not exist'
-#	exit 1 
-#fi
-#	
 #Call initial_check.sh to check the user-specified processing parameters.
-#${SEABATCH_DIRECTORY}/sub/bin/initial_check.sh
-#
-#if [ $? -ne 0 ]; then
-#	exit 1
-#fi
+
+${SEABATCH_BIN_DIRECTORY}'/initial_check.sh' $SEABATCH_LOG_DIRECTORY $SEABATCH_PARAMETER_FILE
+	
+if [ $? -ne 0 ]; then
+
+	SEABATCH_SCRIPT_EXIT_STATUS=1
+	exit_seabatch_script
+
+fi
 ###########################################################################
 ###########################################################################
 
