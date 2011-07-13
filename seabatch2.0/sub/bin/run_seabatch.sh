@@ -100,7 +100,7 @@ if [ $PROCESS = 'YES' ]; then
 
 	if [ $START_LEVEL -le 1 -a $END_LEVEL -ge 2 ]; then
 
-		${SEABATCH}'/sub/bin/level1tolevel2.sh'
+		${SEABATCH}'/sub/bin/level1tolevel2.sh' $SEABATCH_LOG_DIRECTORY $SEABATCH_PARAMETER_FILE
 	
 		if [ $? -ne 0 ]; then
 			EXIT_STATUS=1

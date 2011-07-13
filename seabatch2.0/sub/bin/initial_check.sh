@@ -117,8 +117,9 @@ case $SENSOR in
 	;;
 	
 	*)
-		seabatch_statement "ERROR${SENSOR} is NOT a valid entry."
+		seabatch_statement "ERROR: ${SENSOR} is NOT a valid entry."
 		SEABATCH_SCRIPT_EXIT_STATUS=1
+		seabatch_separator
 		exit_seabatch_script 
 	;;
 	
@@ -132,8 +133,9 @@ case $PROCESS in
 	;;
 	
 	*)
-		seabatch_statement "ERROR${PROCESS} is NOT a valid entry."
+		seabatch_statement "ERROR: ${PROCESS} is NOT a valid entry."
 		SEABATCH_SCRIPT_EXIT_STATUS=1
+		seabatch_separator
 		exit_seabatch_script 
 	;;
 	
@@ -147,7 +149,8 @@ case $LOAD in
 	;;
 	
 	*)
-		seabatch_statement "ERROR${LOAD} is NOT a valid entry."
+		seabatch_statement "ERROR: ${LOAD} is NOT a valid entry."
+		seabatch_separator
 		SEABATCH_SCRIPT_EXIT_STATUS=1
 		exit_seabatch_script 
 	;;
@@ -158,6 +161,3 @@ echo; seabatch_statement "Checking processing parameters used for ALL processing
 seabatch_separator
 ###########################################################################
 ###########################################################################
-
-
-
