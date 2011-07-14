@@ -1,5 +1,10 @@
 #!/bin/bash
 
+
+
+
+##########################################################################
+##########################################################################
 function prompt {
 	
 	VALID_INPUT=NO
@@ -22,15 +27,22 @@ function prompt {
 			;;
 		
 			*)
-				clear
-				echo 'Invalid response (must be "c" or "q").'
-		
+				echo ''				
+				echo 'Invalid response! (must be "c" or "q").'
+
 		esac
 	
 	done
 	
-}	
+}
+##########################################################################
+##########################################################################
 
+
+
+
+##########################################################################
+##########################################################################
 clear
 
 echo 'Thank you for downloading SeaBatch 2.0!'
@@ -39,7 +51,63 @@ echo 'This script will install SeaBatch on your system.'
 
 prompt
 
+if [ $ACTION = 'EXIT' ]; then
+	echo ''
+	echo 'Exiting ...'
+	exit 
+fi
+
+echo ''
+echo 'Beginning the installation ...'
+##########################################################################
+##########################################################################
+
+
+
+
+##########################################################################
+##########################################################################
+WORKING_DIRECTORY=$PWD
+
+echo ''
+echo 'Step 1 of 5: Identify SeaBatch Installation Location'
+echo ''
+echo 'You have chosen to install SeaBatch here:' $WORKING_DIRECTORY | fold -s -w75
+echo ''
+echo 'If this is OK then continue the installation.'
+echo ''
+echo 'If NOT then quit, and refer to the "Installation" section of the manual to start the installation over.' | fold -s -w75 
+
+prompt
+
+if [ $ACTION = 'EXIT' ]; then
+	echo ''
+	echo 'Exiting ...'
+	exit 
+fi
+
 INSTALLATION_STEP=0
+
+echo ''
+echo 'Step 2 of 5: Identify Unix Shell Environment'
+echo ''
+echo 'Currently SeaBatch can only be installed on systems utilizing bash as the Unix shell environment' | fold -s -w75 
+echo ''
+echo 'Your UNIX shell environment is set to:' $SHELL
+	
+	case $SHELL in
+
+		'/bin/bash')
+			
+			echo ''
+			echo 'This is valid. Continuing the installation ...'
+
+		*)
+
+			echo ''
+			echo ''
+
+fi
 
 if [ $ACTION = 'CONTINUE' ]; then
 
