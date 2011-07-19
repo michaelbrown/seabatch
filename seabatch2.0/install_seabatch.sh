@@ -283,8 +283,8 @@ echo ''
 seabatch_statement "To accomplish this the following commands will be entered:"
 echo ''
 echo "echo '' >> ~/.bashrc"
-echo "echo 'export SEABATCH=${WORKING_DIRECTORY}' >> ~/.bashrc"
-echo 'echo source ${SEABATCH}/sub/env/seabatch.env\' >> ~/.bashrc'
+echo "echo 'export SEABATCH='${WORKING_DIRECTORY} >> ~/.bashrc"
+echo "echo 'source \${SEABATCH}/sub/env/seabatch.env' >> ~/.bashrc"
 echo ''
 seabatch_statement "- If this is OK then continue. If NOT then quit, and you will be given directions perform the installation manually."
 
