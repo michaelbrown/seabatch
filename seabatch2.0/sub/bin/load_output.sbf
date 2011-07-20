@@ -306,7 +306,31 @@ if DISPLAY_SETTING eq 'YES' then begin & $
 				
 endif
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Write out the hdf file.
+
+if CURRENT_OUT_FTYPE eq 'HDF' then begin & $
+					
+	HDF_FILE_NAME=BASENAME + '.hdf' & $
+					
+	out, HDF_FILE_NAME, band=1, /DATA, ftype=HDF & $
+	out, HDF_FILE_NAME, band=1, /NAV, ftype=HDF, append=1 & $
+				
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Write out the png.
+
 if OUTPUT_FILE_TYPE eq 'PNG' then begin & $
 
 	PNG_FILE_NAME=BASENAME + '.png' & $
@@ -339,9 +363,17 @@ if OUTPUT_FILE_TYPE eq 'PNG' then begin & $
 	print, SEABATCH_SEPARATOR & $
 	print, SEABATCH_SEPARATOR & $
 
-endif & $
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Write out the kmz file. & $
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Write out the kmz file.
+
 if OUTPUT_FILE_TYPE eq 'KMZ' then begin & $
 			
 	KMZ_PNG_FILE_NAME=BASENAME + '_kmz.png' & $
@@ -438,7 +470,7 @@ if OUTPUT_FILE_TYPE eq 'KMZ' then begin & $
 	REMOVE_PNG_KML_COMMAND='rm' + ' ' + KMZ_PNG_FILE_NAME + ' ' + KMZ_KML_FILE_NAME & $
 	spawn, REMOVE_PNG_KML_COMMAND & $
 					
-endif & $
+endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
