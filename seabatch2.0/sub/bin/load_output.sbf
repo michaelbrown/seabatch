@@ -313,7 +313,7 @@ endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Write out the hdf file.
 
-if CURRENT_OUT_FTYPE eq 'HDF' then begin & $
+if OUTPUT_FILE_TYPE eq 'HDF' then begin & $
 					
 	HDF_FILE_NAME=BASENAME + '.hdf' & $
 					
