@@ -59,6 +59,9 @@ SEABATCH_LOG_DIRECTORY=${1}
 #that will be used which contains the user-specified processing variables.
 
 SEABATCH_PARAMETER_FILE=${2}
+
+check_seabatch_parameter_file
+
 source $SEABATCH_PARAMETER_FILE
 ###########################################################################
 ###########################################################################

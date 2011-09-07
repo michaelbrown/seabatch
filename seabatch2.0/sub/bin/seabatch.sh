@@ -21,13 +21,13 @@ done
 #
 
 DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+
 SEABATCH_LOG_DIRECTORY='seabatch_log_'${DATE}
 mkdir $SEABATCH_LOG_DIRECTORY
-	
-SEABATCH_PARAMETER_FILE=${1:-${SEABATCH}'/master_file.txt'}
-cp $SEABATCH_PARAMETER_FILE $SEABATCH_LOG_DIRECTORY
-	
+
 SEABATCH_LOG_FILE=${SEABATCH_LOG_DIRECTORY}'/seabatch_log_'${DATE}'.txt'
+
+SEABATCH_PARAMETER_FILE=${1:-${SEABATCH}'/seabatch_parameter_file.txt'}
 ###########################################################################
 ###########################################################################
 

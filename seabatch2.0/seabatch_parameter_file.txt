@@ -4,15 +4,9 @@
 
 SENSOR='AQUA'
 
-YEAR='2011'
-
-WEST=116
-EAST=126
-NORTH=20
-SOUTH=5
-
 PROCESS='YES'
-LOAD='NO'
+
+LOAD_OUTPUT='YES'
 ###########################################################################
 ###########################################################################
 
@@ -23,22 +17,25 @@ LOAD='NO'
 ###########################################################################
 #If PROCESS is set to 'YES':
 
-#
-START_LEVEL=1
-END_LEVEL=2
+START_LEVEL='2'
+END_LEVEL='2'
 
-#LEVEL-1 to LEVEL-2:
+#If processing from LEVEL-1 to LEVEL-2:
 
 L2_PRODUCTS=(nLw_645)
+
 L2_RESOLUTION=250
+
 L2GEN_PARAMETER_FILE='DEFAULT'
 
-#LEVEL-2 to LEVEL-3:
+#If processing from LEVEL-2 to LEVEL-3:
+
+MODIS_SST='NO'
+
+YEAR='2011'
 
 SPATIAL_BINS=(4)
 TEMPORAL_BINS=(8D)
-
-MODIS_SST='NO'
 
 L2BIN_PARAMETER_FILE='DEFAULT'
 L3BIN_PARAMETER_FILE='DEFAULT'
@@ -53,8 +50,16 @@ L3BIN_PARAMETER_FILE='DEFAULT'
 #If LOAD is set to "YES":
 
 LOADED_FILE_TYPE='SEABATCH_L3_BIN'
+
 OUTPUT_PRODUCTS=('chlor_a')
-OUTPUT_FILE_TYPES=('KMZ' 'PNG')
+
 OUTPUT_STATISTICS=(MEAN)
+
+WEST=116
+EAST=126
+NORTH=20
+SOUTH=5
+
+OUTPUT_FILE_TYPES=('KMZ' 'PNG')
 ###########################################################################
 ###########################################################################

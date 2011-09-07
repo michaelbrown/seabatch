@@ -68,19 +68,19 @@ source $SEABATCH_PARAMETER_FILE
 
 ###########################################################################
 ###########################################################################
-#Display the processing variables used by level2tolevel3_spatialbin.sh.
+#Display the processing variables used by initial_check.sh.
 
 echo; echo; seabatch_separator
 seabatch_statement "Processing variables used by ${SEABATCH_SCRIPT_NAME}:"
 echo
 seabatch_statement "- SENSOR: ${SENSOR}"
+seabatch_statement "- PROCESS: ${PROCESS}"
+seabatch_statement "- LOAD_OUTPUT: ${LOAD_OUTPUT}"
 seabatch_statement "- YEAR: ${YEAR}"
 seabatch_statement "- WEST: ${WEST}"
 seabatch_statement "- EAST: ${EAST}"
 seabatch_statement "- NORTH: ${NORTH}"
 seabatch_statement "- SOUTH: ${SOUTH}"
-seabatch_statement "- PROCESS: ${PROCESS}"
-seabatch_statement "- LOAD: ${LOAD}"
 seabatch_statement "- START_LEVEL: ${START_LEVEL}"
 seabatch_statement "- END_LEVEL: ${END_LEVEL}"
 echo "- L2_PRODUCTS: ${L2_PRODUCTS[@]}"
@@ -117,10 +117,15 @@ case $SENSOR in
 	;;
 	
 	*)
-		seabatch_statement "ERROR: ${SENSOR} is NOT a valid entry."
-		SEABATCH_SCRIPT_EXIT_STATUS=1
+		echo; seabatch_statement "ERROR: ${SENSOR} is NOT a valid entry."
+		echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+		echo; seabatch_statement "SeaBatch will be exited."
+		
 		seabatch_separator
-		exit_seabatch_script 
+		
+		SEABATCH_SCRIPT_EXIT_STATUS=1
+		exit_seabatch_script
+		
 	;;
 	
 esac
@@ -133,24 +138,35 @@ case $PROCESS in
 	;;
 	
 	*)
-		seabatch_statement "ERROR: ${PROCESS} is NOT a valid entry."
-		SEABATCH_SCRIPT_EXIT_STATUS=1
+	
+		echo; seabatch_statement "ERROR: ${PROCESS} is NOT a valid entry."
+		echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+		echo; seabatch_statement "SeaBatch will be exited."
+		
 		seabatch_separator
-		exit_seabatch_script 
+		
+		SEABATCH_SCRIPT_EXIT_STATUS=1
+		exit_seabatch_script
+		
 	;;
 	
 esac
 
-echo; seabatch_statement "Checking LOAD ..."
-case $LOAD in
+echo; seabatch_statement "Checking LOAD_OUTPUT ..."
+case $LOAD_OUTPUT in
 
 	'YES' | 'NO')
-		seabatch_statement "${LOAD} is a valid entry."
+		seabatch_statement "${LOAD_OUPUT} is a valid entry."
 	;;
 	
 	*)
-		seabatch_statement "ERROR: ${LOAD} is NOT a valid entry."
+	
+		echo; seabatch_statement "ERROR: ${LOAD_OUTPUT} is NOT a valid entry."
+		echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+		echo; seabatch_statement "SeaBatch will be exited."
+		
 		seabatch_separator
+		
 		SEABATCH_SCRIPT_EXIT_STATUS=1
 		exit_seabatch_script 
 	;;
@@ -159,5 +175,83 @@ esac
 
 echo; seabatch_statement "Checking processing parameters used for ALL processing finished!"
 seabatch_separator
+###########################################################################
+###########################################################################
+
+
+
+
+###########################################################################
+###########################################################################
+#Check processing parameters used if PROCESS is set to 'YES'.
+
+if [ $PROCESS = 'YES' ]; then
+
+	echo; echo; seabatch_separator
+	seabatch_statement "Begin checking processing parameters used if PROCESS is set to 'YES' ..."
+
+	echo; seabatch_statement "Checking START_LEVEL ..."
+	case $START_LEVEL in
+
+		'1' | '2')
+			seabatch_statement "${START_LEVEL} is a valid entry."
+		;;
+	
+		*)
+			echo; seabatch_statement "ERROR: ${START_LEVEL} is NOT a valid entry."
+			echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+			echo; seabatch_statement "SeaBatch will be exited."
+		
+			seabatch_separator
+		
+			SEABATCH_SCRIPT_EXIT_STATUS=1
+			exit_seabatch_script
+		
+		;;
+	
+	esac
+	
+	echo; seabatch_statement "Checking END_LEVEL ..."
+	case $END_LEVEL in
+
+		'2' | '3')
+			seabatch_statement "${END_LEVEL} is a valid entry."
+		;;
+	
+		*)
+			echo; seabatch_statement "ERROR: ${END_LEVEL} is NOT a valid entry."
+			echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+			echo; seabatch_statement "SeaBatch will be exited."
+		
+			seabatch_separator
+		
+			SEABATCH_SCRIPT_EXIT_STATUS=1
+			exit_seabatch_script
+		
+		;;
+	
+	esac
+	
+	echo; seabatch_statement "Checking if START_LEVEL and END_LEVEL are set to the same value ..."
+	
+	if [ $START_LEVEL -eq $END_LEVEL ]; then
+	
+		echo; seabatch_statement "ERROR: START_LEVEL and END_LEVEL are set to the same value (${START_LEVEL})."
+		echo; seabatch_statement "It is necessary to fix the SeaBatch parameter file ${SEABATCH_PARAMETER_FILE}."
+		echo; seabatch_statement "SeaBatch will be exited."
+		
+		seabatch_separator
+		
+		SEABATCH_SCRIPT_EXIT_STATUS=1
+		exit_seabatch_script
+		
+	else
+		echo; seabatch_statement "They are not set to the same value ..."
+	fi
+	
+	echo; seabatch_statement "Checking processing parameters used if PROCESS is set to 'YES' finished!"
+	seabatch_separator
+	
+fi
 ###########################################################################
 ###########################################################################

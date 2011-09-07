@@ -320,8 +320,6 @@ seabatch_statement "- Refer to the manual for directions on how to use SeaBatch.
 echo ''
 seabatch_statement "- Contact mike@seabatch.com with any questions or suggestions."
 
-source ~/.bashrc
-
 quit_installation 'NO'
 ##########################################################################
-##########################################################################		
+##########################################################################
