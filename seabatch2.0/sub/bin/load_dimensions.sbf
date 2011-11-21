@@ -237,7 +237,12 @@ if ((FORCED_LOAD_X_DIMENSION eq 'DEFAULT')) and ((FORCED_LOAD_Y_DIMENSION eq 'DE
 	print, '' & $
 	print, 'A spatial resolution of ', strcompress(string(ACTUAL_SPATIAL_BIN), /remove_all), ' km will be used.' & $
 
-	LONGITUDE_RANGE=float(EAST) - float(WEST) & $
+	if WEST ge 0 and EAST lt 0 then begin & $
+		LONGITUDE_RANGE=(180.0-float(WEST))+(180-abs(float(EAST))) & $
+	endif else begin & $
+		LONGITUDE_RANGE=float(EAST) - float(WEST) & $
+	endelse & $
+		
 	LATITUDE_RANGE=float(NORTH) - float(SOUTH) & $
 
 	print, '' & $
