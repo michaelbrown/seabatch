@@ -160,7 +160,7 @@ fi
 ###########################################################################
 #Process MODIS or SeaWiFS Level-3 files to Level-4.
 
-if [ $LOAD = 'YES' ]; then
+if [ $LOAD_OUTPUT = 'YES' ]; then
 
 	${SEABATCH_BIN_DIRECTORY}'/load_output_setup.sh' $SEABATCH_LOG_DIRECTORY $SEABATCH_PARAMETER_FILE
 

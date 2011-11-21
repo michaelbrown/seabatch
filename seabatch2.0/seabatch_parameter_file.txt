@@ -2,9 +2,9 @@
 ###########################################################################
 #ALL processing:
 
-SENSOR='AQUA'
+SENSOR='SEAWIFS'
 
-PROCESS='YES'
+PROCESS='NO'
 
 LOAD_OUTPUT='YES'
 ###########################################################################
@@ -17,7 +17,7 @@ LOAD_OUTPUT='YES'
 ###########################################################################
 #If PROCESS is set to 'YES':
 
-START_LEVEL='2'
+START_LEVEL='1'
 END_LEVEL='2'
 
 #If processing from LEVEL-1 to LEVEL-2:
@@ -49,7 +49,7 @@ L3BIN_PARAMETER_FILE='DEFAULT'
 ###########################################################################
 #If LOAD is set to "YES":
 
-LOADED_FILE_TYPE='SEABATCH_L3_BIN'
+LOADED_FILE_TYPE='OBPG_L3_BIN'
 
 OUTPUT_PRODUCTS=('chlor_a')
 

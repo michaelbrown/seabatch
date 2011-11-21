@@ -110,7 +110,7 @@ if [ $SENSOR = 'AQUA' -o $SENSOR = 'TERRA' ]; then
 	###################################################################
 	###################################################################
 	FILE_TYPE='MODIS Level-1A files'
-	FILE_TYPE_PATTERNS=[AT]${YEAR}*.L1A*
+	FILE_TYPE_PATTERNS=[AT]*'.L1A'*
 	FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/modis_l1a.txt'
 			
 	file_type_list
