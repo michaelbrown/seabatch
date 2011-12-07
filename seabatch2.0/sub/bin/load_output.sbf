@@ -211,7 +211,7 @@ if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' th
 	print, '' & $
 	print, '' & $
 
-	load, LOADED_FILE, prod_name=OUTPUT_PRODUCT, cat_no=1, missing=0.0, xsize=float(LOAD_X_DIMENSION), ysize=float(LOAD_Y_DIMENSION), limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /CYLINDRICAL & $
+	load, LOADED_FILE, prod_name=OUTPUT_PRODUCT, cat_no=1, missing=-999.0, xsize=float(LOAD_X_DIMENSION), ysize=float(LOAD_Y_DIMENSION), limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /CYLINDRICAL & $
 
 endif 
 
@@ -305,6 +305,23 @@ if DISPLAY_SETTING eq 'YES' then begin & $
 	endif & $
 				
 endif
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Write out the flat file.
+
+if OUTPUT_FILE_TYPE eq 'FLAT' then begin & $
+					
+	FLAT_FILE_NAME=BASENAME + '_' + LOAD_X_DIMENSION + 'x' + LOAD_Y_DIMENSION + '.flat' & $
+					
+	out, FLAT_FILE_NAME, band=1, /DATA, ftype=FLAT & $
+				
+endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 

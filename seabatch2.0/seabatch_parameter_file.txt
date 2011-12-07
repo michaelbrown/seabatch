@@ -2,7 +2,7 @@
 ###########################################################################
 #ALL processing:
 
-SENSOR='SEAWIFS'
+SENSOR='AQUA'
 
 PROCESS='NO'
 
@@ -47,19 +47,19 @@ L3BIN_PARAMETER_FILE='DEFAULT'
 
 ###########################################################################
 ###########################################################################
-#If LOAD is set to "YES":
+#If LOAD_OUTPUT is set to "YES":
 
 LOADED_FILE_TYPE='OBPG_L3_BIN'
 
-OUTPUT_PRODUCTS=('chlor_a')
+OUTPUT_PRODUCTS=('sst')
 
 OUTPUT_STATISTICS=(MEAN)
 
-WEST=140
-EAST=-140
-NORTH=50
-SOUTH=20
+WEST=-62.9
+EAST=-62.6
+NORTH=46.6
+SOUTH=46.4
 
-OUTPUT_FILE_TYPES=('KMZ' 'PNG')
+OUTPUT_FILE_TYPES=('FLAT')
 ###########################################################################
 ###########################################################################
