@@ -156,7 +156,7 @@ echo; seabatch_statement "Checking LOAD_OUTPUT ..."
 case $LOAD_OUTPUT in
 
 	'YES' | 'NO')
-		seabatch_statement "${LOAD_OUPUT} is a valid entry."
+		seabatch_statement "${LOAD_OUTPUT} is a valid entry."
 	;;
 	
 	*)

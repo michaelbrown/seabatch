@@ -363,9 +363,9 @@ fi
 
 if [ $LOADED_FILE_TYPE = 'NODC_PFV5_SST' ]; then
 
-	FILE_TYPE='NODC Pathfinder Version 5 "All-pixel" SST files'
+	FILE_TYPE='NODC Pathfinder V5.0/5.1 "All-pixel" SST files'
 	FILE_TYPE_PATTERNS=$NODC_PFV5_SST_FILE_PATTERNS
-	FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/nodc_pfv5/sst.txt'
+	FILE_TYPE_TEXT_FILE=${SEABATCH_LOG_DIRECTORY}'/file_list/nodc_pfv5.txt'
 			
 	file_type_list
 
@@ -376,55 +376,10 @@ if [ $LOADED_FILE_TYPE = 'NODC_PFV5_SST' ]; then
 			LOAD_OUTPUT_PARAMETER_FILE='load_output_parameter_file.txt'
 
 			echo $LOADED_FILE_TYPE > $LOAD_OUTPUT_PARAMETER_FILE
+			echo $SENSOR >> $LOAD_OUTPUT_PARAMETER_FILE
 			echo $LOADED_FILE >> $LOAD_OUTPUT_PARAMETER_FILE
 
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			run_seadas_batch_file ${SEABATCH_BIN_DIRECTORY}'/basename.sbf'
-		
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $WEST >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $EAST >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $NORTH >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $SOUTH >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			
-			if [ $LOADED_FILE_TYPE = 'OBPG_L3_SMI_MODIS_SST' ]; then
-				echo $MODIS_SST_QUALITY >> $LOAD_OUTPUT_PARAMETER_FILE
-			else
-				echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-			fi
-
-			echo $OUTPUT_FILE_TYPE >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			case $OUTPUT_FILE_TYPE in
-
-				'PNG')
-					DISPLAY_SETTING='YES'
-				;;
-
-				*)
-					DISPLAY_SETTING='NO'
-				;;
-
-			esac
-
-			echo $DISPLAY_SETTING >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			echo '-' >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			echo $COASTLINE >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $COASTLINE_COLOR >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $COASTLINE_RESOLUTION >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			echo $COLOR_BAR >> $LOAD_OUTPUT_PARAMETER_FILE
-			echo $COLOR_BAR_ORIENTATION >> $LOAD_OUTPUT_PARAMETER_FILE
-
-			run_seadas_batch_file ${SEABATCH_BIN_DIRECTORY}'/load_output.sbf'
+			run_seadas_batch_file ${SEABATCH_BIN_DIRECTORY}'/nodc_pfv5_qual_file_id.sbf'
 
 		done
 

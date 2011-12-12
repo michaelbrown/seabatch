@@ -49,7 +49,7 @@ L3BIN_PARAMETER_FILE='DEFAULT'
 ###########################################################################
 #If LOAD_OUTPUT is set to "YES":
 
-LOADED_FILE_TYPE='OBPG_L3_BIN'
+LOADED_FILE_TYPE='NODC_PFV5_SST'
 
 OUTPUT_PRODUCTS=('sst')
 
