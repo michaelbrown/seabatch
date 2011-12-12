@@ -112,7 +112,7 @@ seabatch_statement "Begin checking processing parameters used for ALL processing
 echo; seabatch_statement "Checking SENSOR ..."
 case $SENSOR in
 
-	'AQUA' | 'TERRA' | 'SEAWIFS')
+	'AQUA' | 'AVHRR' | 'TERRA' | 'SEAWIFS')
 		seabatch_statement "${SENSOR} is a valid entry."
 	;;
 	
