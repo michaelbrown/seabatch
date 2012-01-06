@@ -31,8 +31,6 @@ print, ''
 print, SEABATCH_SEPARATOR
 print, SEABATCH_SEPARATOR
 print, 'Running ', SEABATCH_SCRIPT_NAME, ' v', SEABATCH_SCRIPT_VERSION, ', SeaBatch v2.0 ...'
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -45,13 +43,13 @@ print, SEABATCH_SEPARATOR
 
 openr, LUN, 'load_output_parameter_file.txt', /get_lun
 
-;Read in LOADED_FILE_TYPE.
-LOADED_FILE_TYPE=''
-readf, LUN, LOADED_FILE_TYPE
-
 ;Read in SENSOR.
 SENSOR=''
 readf, LUN, SENSOR
+
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
 
 ;Read in LOADED_FILE.
 LOADED_FILE=''
@@ -64,6 +62,10 @@ readf, LUN, OUTPUT_PRODUCT
 ;Read in OUTPUT_STATISTIC.
 OUTPUT_STATISTIC=''
 readf, LUN, OUTPUT_STATISTIC
+
+;Read in NODC_PFV5_QUAL_FILE.
+NODC_PFV5_QUAL_FILE=''
+readf, LUN, NODC_PFV5_QUAL_FILE
 
 ;Read in BASENAME.
 BASENAME=''
@@ -101,16 +103,14 @@ free_lun, LUN
 ;Display the processing variables used by basename.sbf.
 
 print, '' 
-print, '' 
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
-print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
 print, '- SENSOR: ', SENSOR
+print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
 print, '- LOADED_FILE: ', LOADED_FILE
 print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
 print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
+print, '- NODC_PFV5_QUAL_FILE: ', NODC_PFV5_QUAL_FILE
 print, '- BASENAME: ', BASENAME
 print, '- FORCED_LOAD_X_DIMENSION: ', FORCED_LOAD_X_DIMENSION
 print, '- FORCED_LOAD_Y_DIMENSION: ', FORCED_LOAD_Y_DIMENSION
@@ -119,8 +119,6 @@ print, '- WEST: ', WEST
 print, '- EAST: ', EAST
 print, '- NORTH: ', NORTH
 print, '- SOUTH: ', SOUTH
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -132,9 +130,6 @@ print, SEABATCH_SEPARATOR
 ;
 
 print, ''
-print, ''
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 print, 'Determining the load x and y dimensions ...'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -220,6 +215,20 @@ if ((FORCED_LOAD_X_DIMENSION eq 'DEFAULT')) and ((FORCED_LOAD_Y_DIMENSION eq 'DE
 			print, 'NOTE: This assumes that all OBPG distributed SeaWiFS Level-3 Binned files have a spatial resolution of 9 km.' & $
 
 		endif & $
+
+	endif & $
+	
+	if LOADED_FILE_TYPE eq 'NODC_PFV5_SST' then begin & $
+		
+		print, '' & $
+		print, LOADED_FILE, ' is a NODC Pathfinder V5.0/5.1 "All-pixel" SST file.' & $ 
+
+		SPATIAL_BIN='4' & $
+
+		print, '' & $		
+		print, 'The spatial resolution of ', LOADED_FILE, ' is ', SPATIAL_BIN, ' km.' & $
+		print, '' & $
+		print, 'NOTE: This assumes that all NODC Pathfinder V5.0/5.1 "All-pixel" SST files have a spatial resolution of 4 km.' & $
 
 	endif & $
 
@@ -308,6 +317,16 @@ endif
 
 print, ''
 print, 'The x and y load dimensions are ', strcompress(string(LOAD_X_DIMENSION), /remove_all), ' and ', strcompress(string(LOAD_Y_DIMENSION), /remove_all), ' respectively.'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+print, ''
+print, 'Exiting ', SEABATCH_SCRIPT_NAME, ' ...'
 print, SEABATCH_SEPARATOR
 print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

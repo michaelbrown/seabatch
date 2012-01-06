@@ -55,11 +55,11 @@ OUTPUT_PRODUCTS=('sst')
 
 OUTPUT_STATISTICS=(MEAN)
 
-WEST=-62.9
-EAST=-62.6
-NORTH=46.6
-SOUTH=46.4
+WEST=115
+EAST=130
+NORTH=20
+SOUTH=4
 
-OUTPUT_FILE_TYPES=('FLAT')
+OUTPUT_FILE_TYPES=('HDF')
 ###########################################################################
 ###########################################################################

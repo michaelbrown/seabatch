@@ -45,13 +45,13 @@ print, SEABATCH_SEPARATOR
 
 openr, LUN, 'load_output_parameter_file.txt', /get_lun
 
-;Read in LOADED_FILE_TYPE.
-LOADED_FILE_TYPE=''
-readf, LUN, LOADED_FILE_TYPE
-
 ;Read in SENSOR.
 SENSOR=''
 readf, LUN, SENSOR
+
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
 
 ;Read in LOADED_FILE.
 LOADED_FILE=''
@@ -64,6 +64,10 @@ readf, LUN, OUTPUT_PRODUCT
 ;Read in OUTPUT_STATISTIC.
 OUTPUT_STATISTIC=''
 readf, LUN, OUTPUT_STATISTIC
+
+;Read in NODC_PFV5_QUAL_FILE.
+NODC_PFV5_QUAL_FILE=''
+readf, LUN, NODC_PFV5_QUAL_FILE
 
 ;Read in BASENAME.
 BASENAME=''
@@ -94,6 +98,10 @@ LOAD_X_DIMENSION=''
 LOAD_Y_DIMENSION=''
 readf, LUN, LOAD_X_DIMENSION
 readf, LUN, LOAD_Y_DIMENSION
+
+;Read in AVHRR_SST_QUALITY.
+AVHRR_SST_QUALITY=''
+readf, LUN, AVHRR_SST_QUALITY
 
 ;Read in MODIS_SST_QUALITY.
 MODIS_SST_QUALITY=''
@@ -160,11 +168,12 @@ print, SEABATCH_SEPARATOR
 print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
-print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
 print, '- SENSOR: ', SENSOR
+print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
 print, '- LOADED_FILE: ', LOADED_FILE
 print, '- OUTPUT_PRODUCT: ', OUTPUT_PRODUCT
 print, '- OUTPUT_STATISTIC: ', OUTPUT_STATISTIC
+print, '- NODC_PFV5_QUAL_FILE: ', NODC_PFV5_QUAL_FILE
 print, '- BASENAME: ', BASENAME
 print, '- FORCED_LOAD_X_DIMENSION: ', FORCED_LOAD_X_DIMENSION
 print, '- FORCED_LOAD_Y_DIMENSION: ', FORCED_LOAD_Y_DIMENSION
@@ -175,6 +184,7 @@ print, '- NORTH: ', NORTH
 print, '- SOUTH: ', SOUTH
 print, '- LOAD_X_DIMENSION: ', LOAD_X_DIMENSION
 print, '- LOAD_Y_DIMENSION: ', LOAD_Y_DIMENSION
+print, '- AVHRR_SST_QUALITY: ', AVHRR_SST_QUALITY
 print, '- MODIS_SST_QUALITY: ', MODIS_SST_QUALITY
 print, '- OUTPUT_FILE_TYPE: ', OUTPUT_FILE_TYPE
 print, '- DISPLAY_SETTING: ', DISPLAY_SETTING
@@ -212,8 +222,65 @@ if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' th
 	print, '' & $
 
 	load, LOADED_FILE, prod_name=OUTPUT_PRODUCT, cat_no=1, missing=-999.0, xsize=float(LOAD_X_DIMENSION), ysize=float(LOAD_Y_DIMENSION), limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /CYLINDRICAL & $
+	
+	LOADED_BAND=1 & $
+	
+endif
 
+if LOADED_FILE_TYPE eq 'NODC_PFV5_SST' then begin & $
+
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Loading sst band of ', LOADED_FILE, ' ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+
+	load, LOADED_FILE, ftype='PFV5' & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Loading qual band of ', NODC_PFV5_QUAL_FILE, ' ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	
+	load, NODC_PFV5_QUAL_FILE, ftype='PFV5' & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Quality-controlling the loaded sst band (all sst values with corresponding quality values less than ', AVHRR_SST_QUALITY, ' will be masked) ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	
+	if AVHRR_SST_QUALITY eq '1' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 1, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '2' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 2, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '3' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 3, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '4' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 4, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '5' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 5, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '6' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 6, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	if AVHRR_SST_QUALITY eq '7' then mband_cmd, cmd_array=['RESULT=B1', 'BAD_INDICES=where(B2 lt 7, COUNT)', 'if COUNT gt 0 then RESULT(BAD_INDICES)=-999.0'], bandname='qc_sst', navband=1 & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Reprojecting the quality-controlled sst band ...' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
+	
+	mapimg, bands=[3], missing=-999.0, xsize=float(LOAD_X_DIMENSION), ysize=float(LOAD_Y_DIMENSION), limit=[float(SOUTH), float(WEST), float(NORTH), float(EAST)], /CYLIN & $
+	
+	LOADED_BAND=4 & $
+	
 endif 
+
 
 if LOADED_FILE_TYPE eq 'OBPG_L3_SMI_OC' or LOADED_FILE_TYPE eq 'OBPG_L3_SMI_MODIS_SST' then begin & $
 
@@ -252,17 +319,17 @@ if DISPLAY_SETTING eq 'YES' then begin & $
 	print, '' & $
 	print, SEABATCH_SEPARATOR & $
 	print, SEABATCH_SEPARATOR & $
-	print, 'Displaying loaded band of ', LOADED_FILE, ' into the SeaDAS memory...'  & $
+	print, 'Displaying loaded band #', strcompress(string(LOADED_BAND), /remove_all), ' of ', LOADED_FILE, ' into the SeaDAS memory...'  & $
 	print, SEABATCH_SEPARATOR & $
 	print, SEABATCH_SEPARATOR & $
 
 	if DISPLAY_MIN eq 'DEFAULT' or DISPLAY_MAX eq 'DEFAULT' then begin & $
-		display, band_no=1, stype=DISPLAY_TYPE, /GEO & $
+		display, band_no=LOADED_BAND, stype=DISPLAY_TYPE, /GEO & $
 	endif else begin & $
-		display, band_no=1, smin=float(DISPLAY_MIN), smax=float(DISPLAY_MAX), stype=DISPLAY_TYPE, /GEO & $
+		display, band_no=LOADED_BAND, smin=float(DISPLAY_MIN), smax=float(DISPLAY_MAX), stype=DISPLAY_TYPE, /GEO & $
 	endelse & $
 
-	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' then begin & $
+	if LOADED_FILE_TYPE eq 'SEABATCH_L3_BIN' or LOADED_FILE_TYPE eq 'OBPG_L3_BIN' or LOADED_FILE_TYPE eq 'NODC_PFV5_SST' then begin & $
 	
 		print, '' & $
 		print, '' & $
@@ -316,8 +383,26 @@ endif
 if OUTPUT_FILE_TYPE eq 'FLAT' then begin & $
 					
 	FLAT_FILE_NAME=BASENAME + '_' + LOAD_X_DIMENSION + 'x' + LOAD_Y_DIMENSION + '.flat' & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', FLAT_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
 					
-	out, FLAT_FILE_NAME, band=1, /DATA, ftype=FLAT & $
+	out, FLAT_FILE_NAME, band=LOADED_BAND, /DATA, ftype=FLAT & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', FLAT_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
 				
 endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -333,9 +418,27 @@ endif
 if OUTPUT_FILE_TYPE eq 'HDF' then begin & $
 					
 	HDF_FILE_NAME=BASENAME + '.hdf' & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Constructing ', HDF_FILE_NAME, ' ...'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, '' & $
+	print, '' & $
 					
-	out, HDF_FILE_NAME, band=1, /DATA, ftype=HDF & $
-	out, HDF_FILE_NAME, band=1, /NAV, ftype=HDF, append=1 & $
+	out, HDF_FILE_NAME, band=LOADED_BAND, /DATA, ftype=HDF & $
+	out, HDF_FILE_NAME, band=LOADED_BAND, /NAV, ftype=HDF, append=1 & $
+	
+	print, '' & $
+	print, '' & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
+	print, 'Wrote ', HDF_FILE_NAME, '!'  & $
+	print, SEABATCH_SEPARATOR & $
+	print, SEABATCH_SEPARATOR & $
 				
 endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

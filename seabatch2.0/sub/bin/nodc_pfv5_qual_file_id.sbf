@@ -31,8 +31,6 @@ print, ''
 print, SEABATCH_SEPARATOR
 print, SEABATCH_SEPARATOR
 print, 'Running ', SEABATCH_SCRIPT_NAME, ' v', SEABATCH_SCRIPT_VERSION, ', SeaBatch v2.0 ...'
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -45,17 +43,25 @@ print, SEABATCH_SEPARATOR
 
 openr, LUN, 'load_output_parameter_file.txt', /get_lun
 
-;Read in LOADED_FILE_TYPE.
-LOADED_FILE_TYPE=''
-readf, LUN, LOADED_FILE_TYPE
-
 ;Read in SENSOR.
 SENSOR=''
 readf, LUN, SENSOR
 
+;Read in LOADED_FILE_TYPE.
+LOADED_FILE_TYPE=''
+readf, LUN, LOADED_FILE_TYPE
+
 ;Read in LOADED_FILE.
 LOADED_FILE=''
 readf, LUN, LOADED_FILE
+
+;Read in OUTPUT_PRODUCT.
+OUTPUT_PRODUCT=''
+readf, LUN, OUTPUT_PRODUCT
+
+;Read in OUTPUT_STATISTIC.
+OUTPUT_STATISTIC=''
+readf, LUN, OUTPUT_STATISTIC
 
 free_lun, LUN
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,16 +75,9 @@ free_lun, LUN
 ;Display the processing variables used by basename.sbf.
 
 print, '' 
-print, '' 
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 print, 'Processing variables used by ', SEABATCH_SCRIPT_NAME, ':'
 print, ''
-print, '- LOADED_FILE_TYPE: ', LOADED_FILE_TYPE
-print, '- SENSOR: ', SENSOR
 print, '- LOADED_FILE: ', LOADED_FILE
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -98,9 +97,6 @@ DAYNIGHT=strmid(LOADED_FILE, FIRST_PERIOD_POSITION+5, 1)
 VERSION=strmid(LOADED_FILE, FIRST_PERIOD_POSITION+6, LAST_DASH_POSITION-(FIRST_PERIOD_POSITION+6))
 
 print, '' 
-print, '' 
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
 print, 'OBSDATE: ', OBSDATE
 print, 'AVGPERIOD: ', AVGPERIOD
 print, 'DAYNIGHT: ', DAYNIGHT
@@ -119,9 +115,26 @@ print, ''
 print, 'NODC Pathfinder V5.0/5.1 "qual" file:'
 print, ''
 print, NODC_PFV5_QUAL_FILE
-print, SEABATCH_SEPARATOR
-print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+print, ''
+print, 'Exiting ', SEABATCH_SCRIPT_NAME, ' ...'
+print, SEABATCH_SEPARATOR
+print, SEABATCH_SEPARATOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 openw, LUN, 'load_output_parameter_file.txt', /get_lun, /APPEND
 printf, LUN, NODC_PFV5_QUAL_FILE
 free_lun, LUN
